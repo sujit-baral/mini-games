@@ -2,6 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <script>
+        // If accessed with trailing slash (e.g. /privacy/), ensure relative assets resolve from root
+        if (window.location.pathname.endsWith('/')) {
+            document.write('<base href="../">');
+        }
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#080a11">
     <meta name="description" content="Privacy Policy for Mini Game Arcade - Transparent, zero-tracker policy for our open web games.">
