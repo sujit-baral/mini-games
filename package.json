@@ -1,0 +1,23 @@
+{
+  "name": "mini-game-arcade",
+  "version": "2.0.0",
+  "description": "A responsive, modern HTML5 browser arcade featuring instant-play Canvas & Web Audio mini-games.",
+  "scripts": {
+    "start": "npx -y serve .",
+    "dev": "npx -y serve .",
+    "build": "npm test",
+    "test": "node qa_test_suite.js"
+  },
+  "keywords": [
+    "arcade",
+    "games",
+    "html5",
+    "canvas",
+    "web-audio",
+    "mini-games",
+    "fruit-slice",
+    "brick-breaker"
+  ],
+  "author": "",
+  "license": "MIT"
+}

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script>
+        // Trailing slash & base protection for static servers
+        (function() {
+            var p = window.location.pathname;
+            if (p && !p.endsWith('/') && !p.endsWith('.html')) {
+                document.write('<base href="' + p + '/">');
+                if (window.history && window.history.replaceState) {
+                    window.history.replaceState(null, '', p + '/' + window.location.search + window.location.hash);
+                }
+            }
+        })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#070a10">
+    <meta name="description" content="Cyber Memory Match - Train your brain with this neon cyber card matching arcade game. Three difficulty levels, moves tracking, and responsive controls. Play free online!">
+    <title>Cyber Memory Match | Mini Game Arcade</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800;900&family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Top Arcade Bar -->
+        <header class="arcade-header">
+            <div class="nav-left">
+                <a href="../../index.html" class="btn-back" title="Back to Mini Game Arcade Home">
+                    <span class="back-arrow">←</span>
+                    <span class="back-label">Arcade Home</span>
+                </a>
+                <div class="brand">
+                    <span class="brand-icon">🧠</span>
+                    <span class="brand-title">CYBER<span class="highlight">MATCH</span></span>
+                </div>
+            </div>
+
+            <div class="header-controls">
+                <button id="btn-sound-toggle" class="btn-icon" aria-label="Toggle Sound" title="Toggle Sound (M)" type="button">
+                    <span id="sound-icon">🔊</span>
+                    <span id="sound-text" class="btn-label">Sound ON</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Game Arena -->
+        <main class="game-wrapper">
+            <div id="game-container" class="game-container">
+
+                <!-- In-Game HUD -->
+                <div id="screen-hud" class="hud-overlay hidden">
+                    <div class="hud-left">
+                        <div class="hud-stat-box timer-box">
+                            <span class="hud-label">TIME</span>
+                            <span id="hud-timer-value" class="hud-value">00:00</span>
+                        </div>
+                    </div>
+
+                    <div class="hud-center">
+                        <div class="hud-stat-box pairs-box">
+                            <span class="hud-label">PAIRS</span>
+                            <span id="hud-pairs-value" class="hud-value">0 / 8</span>
+                        </div>
+                    </div>
+
+                    <div class="hud-right">
+                        <div class="hud-stat-box moves-box">
+                            <span class="hud-label">MOVES</span>
+                            <span id="hud-moves-value" class="hud-value">0</span>
+                        </div>
+
+                        <button id="btn-pause" class="btn-pause" aria-label="Pause Game" title="Pause Game (P or Space)" type="button">
+                            <span>⏸</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3D Card Grid Arena -->
+                <div class="cards-viewport">
+                    <div id="cards-grid" class="cards-grid grid-classic" role="region" aria-label="Memory Card Matrix"></div>
+                </div>
+
+                <!-- Start Screen Menu -->
+                <div id="screen-menu" class="modal-screen">
+                    <div class="menu-card">
+                        <div class="logo-hero">
+                            <span class="hero-icon">🧠⚡</span>
+                            <h1 class="game-title">MEMORY<span class="neon-text">MATCH</span></h1>
+                            <p class="tagline">Flip, recall &amp; match neon quantum symbols!</p>
+                        </div>
+
+                        <!-- Difficulty Selector -->
+                        <div class="diff-selection">
+                            <label class="diff-title">SELECT DIFFICULTY</label>
+                            <div class="diff-tabs" role="tablist">
+                                <button class="diff-tab" data-diff="easy" type="button" role="tab">
+                                    <span class="diff-name">Easy</span>
+                                    <span class="diff-desc">3x4 (12 Cards)</span>
+                                </button>
+                                <button class="diff-tab active" data-diff="classic" type="button" role="tab">
+                                    <span class="diff-name">Classic</span>
+                                    <span class="diff-desc">4x4 (16 Cards)</span>
+                                </button>
+                                <button class="diff-tab" data-diff="expert" type="button" role="tab">
+                                    <span class="diff-name">Expert</span>
+                                    <span class="diff-desc">4x5 (20 Cards)</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Best Score Display for current difficulty -->
+                        <div class="menu-record-box">
+                            <div class="record-item">
+                                <span class="record-label">BEST MOVES</span>
+                                <span id="menu-best-moves" class="record-val">--</span>
+                            </div>
+                            <div class="record-item">
+                                <span class="record-label">BEST TIME</span>
+                                <span id="menu-best-time" class="record-val">--</span>
+                            </div>
+                        </div>
+
+                        <button id="btn-start-game" class="btn-primary" type="button">
+                            <span>▶ START GAME</span>
+                        </button>
+
+                        <div class="quick-hints">
+                            <span>🖱️ Click or tap cards to flip &bull; ⌨️ Arrows + Space / Enter</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pause Overlay -->
+                <div id="screen-pause" class="modal-screen hidden">
+                    <div class="menu-card pause-card">
+                        <h2 class="modal-title">GAME PAUSED</h2>
+                        <div class="menu-actions">
+                            <button id="btn-resume" class="btn-primary" type="button">
+                                <span>▶ RESUME</span>
+                            </button>
+                            <button id="btn-restart" class="btn-secondary" type="button">
+                                <span>🔄 RESTART</span>
+                            </button>
+                            <button id="btn-pause-menu" class="btn-secondary" type="button">
+                                <span>🏠 MAIN MENU</span>
+                            </button>
+                            <a href="../../index.html" class="btn-secondary">
+                                <span>🕹️ ARCADE HOME</span>
+                            </a>
+                        </div>
+                        <div class="shortcuts-legend">
+                            <p>Keyboard: <code>[Space/P]</code> Resume | <code>[R]</code> Restart | <code>[M]</code> Mute</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Victory Overlay -->
+                <div id="screen-victory" class="modal-screen hidden">
+                    <div class="menu-card victory-card">
+                        <span class="win-trophy">🏆</span>
+                        <h2 class="modal-title win-title">MATRIX CLEARED!</h2>
+                        <div id="win-new-record" class="badge-new-record hidden">⭐ NEW BEST RECORD! ⭐</div>
+
+                        <div class="score-summary-grid">
+                            <div class="score-summary-box primary-score">
+                                <span class="summary-label">TOTAL TIME</span>
+                                <span id="win-time" class="summary-value highlight">00:00</span>
+                            </div>
+                            <div class="score-summary-box">
+                                <span class="summary-label">MOVES USED</span>
+                                <span id="win-moves" class="summary-value">0</span>
+                            </div>
+                            <div class="score-summary-box">
+                                <span class="summary-label">ACCURACY</span>
+                                <span id="win-accuracy" class="summary-value">100%</span>
+                            </div>
+                        </div>
+
+                        <div class="menu-actions">
+                            <button id="btn-win-restart" class="btn-primary" type="button">
+                                <span>🔄 PLAY AGAIN</span>
+                            </button>
+                            <button id="btn-win-menu" class="btn-secondary" type="button">
+                                <span>🏠 MAIN MENU</span>
+                            </button>
+                            <a href="../../index.html" class="btn-secondary">
+                                <span>🕹️ ARCADE HOME</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Game Controls & Info Guide Section -->
+        <section class="game-info-section">
+            <div class="info-container">
+                <div class="info-card">
+                    <h2>🎮 How to Play &amp; Controls</h2>
+                    <div class="controls-grid">
+                        <div class="control-item">
+                            <span class="control-key">🖱️ Mouse &amp; Touch</span>
+                            <p>Click or tap any two hidden cards to flip them. If they match, they lock in place. If not, they flip back over.</p>
+                        </div>
+                        <div class="control-item">
+                            <span class="control-key">⌨️ Keyboard Navigation</span>
+                            <p>Use <code>[Arrow Keys]</code> to navigate the matrix of cards. Press <code>[Space]</code> or <code>[Enter]</code> to flip the focused card.</p>
+                        </div>
+                        <div class="control-item">
+                            <span class="control-key">⚡ Pro Memory Strategy</span>
+                            <p>Keep track of symbol positions you reveal. Fewer moves give higher accuracy and better arcade rankings!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h2>🧠 Difficulty Tiers</h2>
+                    <p style="color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem;">
+                        Choose your training mode to sharpen recall speed and spatial memory:
+                    </p>
+                    <ul class="combo-list">
+                        <li><strong>Easy Mode:</strong> 12 cards (6 pairs) &bull; Great for beginners &amp; quick reflex warm-ups</li>
+                        <li><strong>Classic Mode:</strong> 16 cards (8 pairs) &bull; Balanced standard arcade memory challenge</li>
+                        <li><strong>Expert Mode:</strong> 20 cards (10 pairs) &bull; Maximum concentration grid for master gamers</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Arcade Footer -->
+        <footer class="arcade-footer">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="../../index.html">Arcade Home</a> &bull;
+                    <a href="../../about.html">About</a> &bull;
+                    <a href="../../contact.html">Contact</a> &bull;
+                    <a href="../../privacy.html">Privacy Policy</a> &bull;
+                    <a href="../../terms.html">Terms of Service</a>
+                </div>
+                <p class="copyright">Mini Game Arcade &bull; 100% Free HTML5 Games &bull; No cookies, no trackers</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="js/audio.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
+

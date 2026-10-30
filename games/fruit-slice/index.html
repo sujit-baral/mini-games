@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script>
+        // Trailing slash & base protection for static servers
+        (function() {
+            var p = window.location.pathname;
+            if (p && !p.endsWith('/') && !p.endsWith('.html')) {
+                document.write('<base href="' + p + '/">');
+                if (window.history && window.history.replaceState) {
+                    window.history.replaceState(null, '', p + '/' + window.location.search + window.location.hash);
+                }
+            }
+        })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#120c09">
+    <meta name="description" content="Fruit Slice Arcade - Play online in your browser. Fast-paced fruit slicing reflex game with combos, bombs, and dual game modes.">
+    <title>Fruit Slice Arcade | Mini Game Arcade</title>
+
+    <!-- Google Fonts for arcade typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,600;0,800;0,900;1,900&family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Top Arcade Navigation Bar -->
+        <header class="arcade-header">
+            <div class="nav-left">
+                <a href="../../index.html" class="btn-back" title="Back to Mini Game Arcade Home">
+                    <span class="back-arrow">←</span>
+                    <span class="back-label">Arcade Home</span>
+                </a>
+                <div class="brand">
+                    <span class="brand-icon">🍉</span>
+                    <span class="brand-title">FRUIT<span class="highlight">SLICE</span></span>
+                </div>
+            </div>
+
+            <div class="header-controls">
+                <button id="btn-sound-toggle" class="btn-icon" aria-label="Toggle Sound" title="Toggle Sound (M)" type="button">
+                    <span id="sound-icon">🔊</span>
+                    <span id="sound-text" class="btn-label">Sound ON</span>
+                </button>
+                <button id="btn-help" class="btn-icon" aria-label="How to Play" title="How to Play" type="button">
+                    <span>❓</span>
+                    <span class="btn-label">Rules</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Game Arena -->
+        <main class="game-wrapper">
+            <div id="game-container" class="game-container">
+                <!-- HTML5 Canvas for 60fps rendering -->
+                <canvas id="game-canvas"></canvas>
+
+                <!-- In-Game Heads-Up Display (HUD) -->
+                <div id="screen-hud" class="hud-overlay hidden">
+                    <div class="hud-left">
+                        <div class="hud-stat-box score-box">
+                            <span class="hud-label">SCORE</span>
+                            <span id="hud-score-value" class="hud-value">0</span>
+                        </div>
+                    </div>
+
+                    <div class="hud-center">
+                        <!-- Arcade Timer (shown in Arcade mode) -->
+                        <div id="hud-timer" class="hud-stat-box timer-box hidden">
+                            <span class="hud-label">TIME</span>
+                            <span id="hud-timer-value" class="hud-value">60</span>
+                        </div>
+                    </div>
+
+                    <div class="hud-right">
+                        <!-- Classic Mode 3 Lives / Strikes -->
+                        <div id="hud-strikes" class="strikes-box">
+                            <span id="strike-1" class="strike-mark">✕</span>
+                            <span id="strike-2" class="strike-mark">✕</span>
+                            <span id="strike-3" class="strike-mark">✕</span>
+                        </div>
+
+                        <button id="btn-pause" class="btn-pause" aria-label="Pause Game" title="Pause Game (Space)" type="button">
+                            <span>⏸</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Start Screen / Menu Overlay -->
+                <div id="screen-menu" class="modal-screen">
+                    <div class="menu-card">
+                        <div class="logo-hero">
+                            <div class="hero-blade-art">
+                                <span class="hero-fruit fruit-left">🍉</span>
+                                <span class="hero-slash">⚡</span>
+                                <span class="hero-fruit fruit-right">🍊</span>
+                            </div>
+                            <h1 class="game-title">FRUIT<span class="neon-text">SLICE</span></h1>
+                            <p class="tagline">Slash, chain combos &amp; dodge bombs!</p>
+                        </div>
+
+                        <!-- Mode Switcher -->
+                        <div class="mode-selector">
+                            <button id="btn-mode-classic" class="mode-tab active" type="button">
+                                <span class="mode-icon">⚔️</span>
+                                <span class="mode-name">CLASSIC</span>
+                                <span class="mode-sub">3 Lives</span>
+                            </button>
+                            <button id="btn-mode-arcade" class="mode-tab" type="button">
+                                <span class="mode-icon">⏱️</span>
+                                <span class="mode-name">ARCADE</span>
+                                <span class="mode-sub">60s Frenzy</span>
+                            </button>
+                        </div>
+
+                        <p id="mode-description" class="mode-description">
+                            Classic Mode: 3 strikes allowed. Missed fruits cost lives. Slicing a bomb is instant game over!
+                        </p>
+
+                        <!-- Best Score Pill -->
+                        <div class="high-score-pill">
+                            <span class="trophy-icon">🏆</span>
+                            <span>BEST RECORD:</span>
+                            <strong id="menu-high-score">0</strong>
+                        </div>
+
+                        <!-- Start Button -->
+                        <button id="btn-start-game" class="btn-primary" type="button">
+                            <span class="play-icon">▶</span>
+                            <span>START SLICING</span>
+                        </button>
+
+                        <div class="quick-hints">
+                            <span>📱 Swipe screen or 🖱️ Click &amp; drag mouse</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pause Menu Overlay -->
+                <div id="screen-pause" class="modal-screen hidden">
+                    <div class="menu-card pause-card">
+                        <h2 class="modal-title">GAME PAUSED</h2>
+                        <div class="menu-actions">
+                            <button id="btn-resume" class="btn-primary" type="button">
+                                <span>▶ RESUME</span>
+                            </button>
+                            <button id="btn-restart" class="btn-secondary" type="button">
+                                <span>🔄 RESTART</span>
+                            </button>
+                            <button id="btn-pause-menu" class="btn-secondary" type="button">
+                                <span>🏠 MAIN MENU</span>
+                            </button>
+                            <a href="../../index.html" class="btn-secondary">
+                                <span>🕹️ ARCADE HOME</span>
+                            </a>
+                        </div>
+                        <div class="shortcuts-legend">
+                            <p>Keyboard: <code>[Space]</code> Resume | <code>[R]</code> Restart | <code>[M]</code> Mute</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Game Over Overlay -->
+                <div id="screen-gameover" class="modal-screen hidden">
+                    <div class="menu-card gameover-card">
+                        <div class="gameover-header">
+                            <h2 class="modal-title danger-title">GAME OVER</h2>
+                            <p id="gameover-reason" class="gameover-reason">BOOM! You sliced an explosive bomb!</p>
+                        </div>
+
+                        <div class="score-summary-grid">
+                            <div class="score-summary-box primary-score">
+                                <span class="summary-label">FINAL SCORE</span>
+                                <span id="gameover-score" class="summary-value highlight">0</span>
+                                <div id="gameover-new-record" class="new-record-tag hidden">★ NEW HIGH SCORE! ★</div>
+                            </div>
+                            <div class="score-summary-box">
+                                <span class="summary-label">BEST RECORD</span>
+                                <span id="gameover-high-score" class="summary-value">0</span>
+                            </div>
+                        </div>
+
+                        <div class="stats-pills">
+                            <div class="stat-pill">
+                                <span>🍉 Sliced:</span>
+                                <strong id="stat-fruits">0</strong>
+                            </div>
+                            <div class="stat-pill">
+                                <span>⚡ Best Combo:</span>
+                                <strong id="stat-combo">0x</strong>
+                            </div>
+                        </div>
+
+                        <div class="menu-actions">
+                            <button id="btn-gameover-restart" class="btn-primary" type="button">
+                                <span>🔄 PLAY AGAIN</span>
+                            </button>
+                            <button id="btn-gameover-menu" class="btn-secondary" type="button">
+                                <span>🏠 MAIN MENU</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- First-Time Instruction / Help Modal -->
+                <div id="help-modal" class="modal-dialog hidden">
+                    <div class="modal-backdrop"></div>
+                    <div class="help-dialog-content">
+                        <div class="modal-dialog-header">
+                            <h3>⚔️ HOW TO PLAY</h3>
+                            <button id="btn-close-help" class="btn-close" aria-label="Close Rules" type="button">&times;</button>
+                        </div>
+
+                        <div class="rules-grid">
+                            <div class="rule-card">
+                                <div class="rule-icon">🗡️</div>
+                                <h4>Swipe to Slice</h4>
+                                <p>Click &amp; drag your mouse or swipe your finger across flying fruits to cut them before they fall.</p>
+                            </div>
+
+                            <div class="rule-card">
+                                <div class="rule-icon">⚡</div>
+                                <h4>Combo Bonuses</h4>
+                                <p>Slice 3 or more fruits in a single swipe stroke to trigger huge multiplier bonuses (up to +20 pts!).</p>
+                            </div>
+
+                            <div class="rule-card danger-card">
+                                <div class="rule-icon">💣</div>
+                                <h4>AVOID BOMBS</h4>
+                                <p>Watch out for black explosive bombs! In Classic mode, hitting a bomb is instant game over.</p>
+                            </div>
+
+                            <div class="rule-card">
+                                <div class="rule-icon">🏆</div>
+                                <h4>Two Game Modes</h4>
+                                <p><strong>Classic:</strong> 3 strikes for dropped fruits.<br><strong>Arcade:</strong> 60s Frenzy with massive combo waves!</p>
+                            </div>
+                        </div>
+
+                        <div class="modal-dialog-footer">
+                            <button id="btn-start-dialog" class="btn-primary" type="button">
+                                <span>GOT IT, LET'S PLAY!</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Game Controls & Info Guide Section -->
+        <section class="game-info-section">
+            <div class="info-container">
+                <div class="info-card">
+                    <h2>🎮 How to Play &amp; Controls</h2>
+                    <div class="controls-grid">
+                        <div class="control-item">
+                            <span class="control-key">🖱️ Mouse</span>
+                            <p>Click &amp; drag your cursor rapidly across fruit trajectories to slash.</p>
+                        </div>
+                        <div class="control-item">
+                            <span class="control-key">📱 Touchscreen</span>
+                            <p>Swipe your finger directly across fruits to slice. Multi-touch enabled.</p>
+                        </div>
+                        <div class="control-item">
+                            <span class="control-key">⌨️ Shortcuts</span>
+                            <p><code>[Space]</code> Pause/Resume &bull; <code>[R]</code> Restart &bull; <code>[M]</code> Mute</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h2>⚡ Combo Multipliers &amp; Scoring</h2>
+                    <ul class="combo-list">
+                        <li><strong>2 Fruits:</strong> Double Slice &bull; <span class="pts-badge">+2 Bonus</span></li>
+                        <li><strong>3 Fruits:</strong> Triple Combo &bull; <span class="pts-badge">+5 Bonus</span></li>
+                        <li><strong>4 Fruits:</strong> Mega Combo &bull; <span class="pts-badge">+10 Bonus</span></li>
+                        <li><strong>5+ Fruits:</strong> Fruit Blitz Frenzy &bull; <span class="pts-badge">+20 Bonus</span></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Arcade Footer -->
+        <footer class="arcade-footer">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="../../index.html">Arcade Home</a> &bull;
+                    <a href="../../about.html">About</a> &bull;
+                    <a href="../../contact.html">Contact</a> &bull;
+                    <a href="../../privacy.html">Privacy Policy</a> &bull;
+                    <a href="../../terms.html">Terms of Service</a>
+                </div>
+                <p class="copyright">Mini Game Arcade &bull; 100% Free HTML5 Games &bull; No cookies, no trackers</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Game Scripts (Strict order) -->
+    <script src="js/audio.js"></script>
+    <script src="js/fruits.js"></script>
+    <script src="js/particles.js"></script>
+    <script src="js/blade.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
+

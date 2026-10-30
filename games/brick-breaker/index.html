@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script>
+        // Trailing slash & base protection for static servers
+        (function() {
+            var p = window.location.pathname;
+            if (p && !p.endsWith('/') && !p.endsWith('.html')) {
+                document.write('<base href="' + p + '/">');
+                if (window.history && window.history.replaceState) {
+                    window.history.replaceState(null, '', p + '/' + window.location.search + window.location.hash);
+                }
+            }
+        })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#070a10">
+    <meta name="description" content="Cyber Brick Breaker - Modern retro arcade block smasher with powerups, neon visuals, and synthesized Web Audio. Play free online!">
+    <title>Cyber Brick Breaker | Mini Game Arcade</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800;900&family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Top Arcade Bar -->
+        <header class="arcade-header">
+            <div class="nav-left">
+                <a href="../../index.html" class="btn-back" title="Back to Mini Game Arcade Home">
+                    <span class="back-arrow">←</span>
+                    <span class="back-label">Arcade Home</span>
+                </a>
+                <div class="brand">
+                    <span class="brand-icon">🧱</span>
+                    <span class="brand-title">CYBER<span class="highlight">BREAKER</span></span>
+                </div>
+            </div>
+
+            <div class="header-controls">
+                <button id="btn-sound-toggle" class="btn-icon" aria-label="Toggle Sound" title="Toggle Sound (M)" type="button">
+                    <span id="sound-icon">🔊</span>
+                    <span id="sound-text" class="btn-label">Sound ON</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Game Arena -->
+        <main class="game-wrapper">
+            <div id="game-container" class="game-container">
+                <canvas id="brick-canvas"></canvas>
+
+                <!-- In-Game HUD -->
+                <div id="screen-hud" class="hud-overlay hidden">
+                    <div class="hud-left">
+                        <div class="hud-stat-box score-box">
+                            <span class="hud-label">SCORE</span>
+                            <span id="hud-score-value" class="hud-value">0</span>
+                        </div>
+                    </div>
+
+                    <div class="hud-center">
+                        <div class="hud-stat-box">
+                            <span class="hud-label">LEVEL</span>
+                            <span id="hud-level-value" class="hud-value">1</span>
+                        </div>
+                    </div>
+
+                    <div class="hud-right">
+                        <div class="hud-stat-box lives-box">
+                            <span class="hud-label">LIVES</span>
+                            <span id="hud-lives-value" class="hud-value">❤️❤️❤️</span>
+                        </div>
+
+                        <button id="btn-pause" class="btn-pause" aria-label="Pause Game" title="Pause Game (Space)" type="button">
+                            <span>⏸</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Start Screen Menu -->
+                <div id="screen-menu" class="modal-screen">
+                    <div class="menu-card">
+                        <div class="logo-hero">
+                            <span class="hero-icon">🧱⚡</span>
+                            <h1 class="game-title">CYBER<span class="neon-text">BREAKER</span></h1>
+                            <p class="tagline">Smash neon bricks &amp; grab powerups!</p>
+                        </div>
+
+                        <div class="features-summary">
+                            <div class="feat-item">🎯 <span>5 Rows of Color Bricks</span></div>
+                            <div class="feat-item">⚡ <span>Wide Paddle &amp; Multiball Drops</span></div>
+                            <div class="feat-item">📱 <span>Touch &amp; Mouse Controlled</span></div>
+                        </div>
+
+                        <button id="btn-start-game" class="btn-primary" type="button">
+                            <span>▶ PLAY NOW</span>
+                        </button>
+
+                        <div class="quick-hints">
+                            <span>🖱️ Move mouse or swipe finger across screen</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pause Overlay -->
+                <div id="screen-pause" class="modal-screen hidden">
+                    <div class="menu-card pause-card">
+                        <h2 class="modal-title">GAME PAUSED</h2>
+                        <div class="menu-actions">
+                            <button id="btn-resume" class="btn-primary" type="button">
+                                <span>▶ RESUME</span>
+                            </button>
+                            <button id="btn-restart" class="btn-secondary" type="button">
+                                <span>🔄 RESTART</span>
+                            </button>
+                            <button id="btn-pause-menu" class="btn-secondary" type="button">
+                                <span>🏠 MAIN MENU</span>
+                            </button>
+                            <a href="../../index.html" class="btn-secondary">
+                                <span>🕹️ ARCADE HOME</span>
+                            </a>
+                        </div>
+                        <div class="shortcuts-legend">
+                            <p>Keyboard: <code>[Space]</code> Resume | <code>[R]</code> Restart | <code>[M]</code> Mute</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Game Over Overlay -->
+                <div id="screen-gameover" class="modal-screen hidden">
+                    <div class="menu-card gameover-card">
+                        <h2 class="modal-title danger-title">GAME OVER</h2>
+                        <p class="gameover-reason">All balls lost! Ready for another run?</p>
+
+                        <div class="score-summary-grid">
+                            <div class="score-summary-box primary-score">
+                                <span class="summary-label">FINAL SCORE</span>
+                                <span id="gameover-score" class="summary-value highlight">0</span>
+                            </div>
+                            <div class="score-summary-box">
+                                <span class="summary-label">BEST RECORD</span>
+                                <span id="gameover-high-score" class="summary-value">0</span>
+                            </div>
+                        </div>
+
+                        <div class="menu-actions">
+                            <button id="btn-gameover-restart" class="btn-primary" type="button">
+                                <span>🔄 PLAY AGAIN</span>
+                            </button>
+                            <button id="btn-gameover-menu" class="btn-secondary" type="button">
+                                <span>🏠 MAIN MENU</span>
+                            </button>
+                            <a href="../../index.html" class="btn-secondary">
+                                <span>🕹️ ARCADE HOME</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Game Controls & Info Guide Section -->
+        <section class="game-info-section">
+            <div class="info-container">
+                <div class="info-card">
+                    <h2>🎮 Controls &amp; Powerups</h2>
+                    <div class="controls-grid">
+                        <div class="control-item">
+                            <span class="control-key">🖱️ Mouse / Touch Drag</span>
+                            <p>Move mouse or slide finger anywhere along the bottom area to guide your paddle.</p>
+                        </div>
+                        <div class="control-item">
+                            <span class="control-key">⌨️ Keyboard</span>
+                            <p><code>[Left / Right]</code> or <code>[A / D]</code> to move paddle. <code>[Space]</code> to launch / pause.</p>
+                        </div>
+                        <div class="control-item">
+                            <span class="control-key">💊 Powerup Drops</span>
+                            <p><strong>[W]</strong> Wide Paddle &bull; <strong>[M]</strong> Multiball &bull; <strong>[+1]</strong> Bonus Life</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h2>⭐ Game Objective</h2>
+                    <p style="color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem;">
+                        Clear all bricks across the grid to advance to the next level. Smash bricks in rapid succession to build your combo multiplier up to 4x!
+                    </p>
+                    <ul class="combo-list">
+                        <li><strong>Magenta Bricks:</strong> <span class="pts-badge">50 Pts</span></li>
+                        <li><strong>Orange Bricks:</strong> <span class="pts-badge">40 Pts</span></li>
+                        <li><strong>Yellow Bricks:</strong> <span class="pts-badge">30 Pts</span></li>
+                        <li><strong>Green Bricks:</strong> <span class="pts-badge">20 Pts</span></li>
+                        <li><strong>Cyan Bricks:</strong> <span class="pts-badge">10 Pts</span></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Arcade Footer -->
+        <footer class="arcade-footer">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="../../index.html">Arcade Home</a> &bull;
+                    <a href="../../about.html">About</a> &bull;
+                    <a href="../../contact.html">Contact</a> &bull;
+                    <a href="../../privacy.html">Privacy Policy</a> &bull;
+                    <a href="../../terms.html">Terms of Service</a>
+                </div>
+                <p class="copyright">Mini Game Arcade &bull; 100% Free HTML5 Games &bull; No cookies, no trackers</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="js/audio.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
+

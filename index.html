@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#080a11">
+    <meta name="description" content="Mini Game Arcade - Fast, responsive, browser-based HTML5 games for phone, tablet, and desktop. Play instantly with zero downloads!">
+    <title>Mini Game Arcade | Free Browser Games</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800;900&family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/home.css">
+</head>
+<body>
+    <!-- Site Header -->
+    <header class="site-header">
+        <div class="header-container">
+            <a href="index.html" class="site-logo">
+                <span class="logo-icon">🕹️</span>
+                <span class="logo-text">MINI GAME <span class="highlight">ARCADE</span></span>
+            </a>
+
+            <nav class="site-nav" aria-label="Main Navigation">
+                <ul class="nav-links">
+                    <li><a href="#games" class="nav-link active">Games</a></li>
+                    <li><a href="#features" class="nav-link">Features</a></li>
+                    <li><a href="about.html" class="nav-link">About</a></li>
+                    <li><a href="contact.html" class="nav-link">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <span class="hero-badge">⚡ 100% Free &bull; Instant Play</span>
+            <h1 class="hero-title">Pure Arcade Thrills. <span class="gradient-text">Zero Lag. Instant Play.</span></h1>
+            <p class="hero-description">
+                Experience high-performance, browser-based HTML5 mini-games built with Canvas and Web Audio.
+                Playable right on your phone, tablet, or desktop with no downloads, no accounts, and no intrusive ads.
+            </p>
+            <div class="hero-actions">
+                <a href="#games" class="btn btn-primary">
+                    <span>🎮 Browse All Games</span>
+                </a>
+                <a href="games/fruit-slice/index.html" class="btn btn-secondary">
+                    <span>🍉 Play Fruit Slice</span>
+                </a>
+            </div>
+        </section>
+
+        <!-- Search & Filter Bar -->
+        <section class="toolbar-section" id="games">
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input 
+                    type="search" 
+                    id="search-games" 
+                    class="search-input" 
+                    placeholder="Search games by title, keyword, or mechanic (e.g., fruit, slice, brick, reflex)..."
+                    aria-label="Search games"
+                >
+            </div>
+
+            <div class="filter-row">
+                <div class="category-filters" role="group" aria-label="Game Categories">
+                    <button class="btn-filter active" data-category="all" type="button">All Games</button>
+                    <button class="btn-filter" data-category="action" type="button">Action &amp; Reflex</button>
+                    <button class="btn-filter" data-category="arcade" type="button">Retro Arcade</button>
+                    <button class="btn-filter" data-category="puzzle" type="button">Puzzle &amp; Logic</button>
+                </div>
+
+                <span id="results-count" class="results-count">Loading games...</span>
+            </div>
+        </section>
+
+        <!-- Dynamic Games Grid (Populated from js/games-data.js) -->
+        <section class="games-grid" id="games-grid" aria-label="Games Catalog">
+            <!-- Fallback noscript / pre-render content -->
+            <noscript>
+                <article class="game-card">
+                    <div class="card-body">
+                        <span class="card-category">Action &amp; Reflex</span>
+                        <h3 class="card-title">Fruit Slice Arcade</h3>
+                        <p class="card-description">Slash flying fruits, chain explosive combos, and dodge ticking bombs across Classic and Arcade frenzy modes.</p>
+                        <a href="games/fruit-slice/index.html" class="btn btn-primary btn-play-card">Play Fruit Slice</a>
+                    </div>
+                </article>
+                <article class="game-card">
+                    <div class="card-body">
+                        <span class="card-category">Retro Arcade</span>
+                        <h3 class="card-title">Cyber Brick Breaker</h3>
+                        <p class="card-description">Shatter neon cyber grids with precision paddle deflection, catch multiball drops, and conquer escalating difficulty tiers.</p>
+                        <a href="games/brick-breaker/index.html" class="btn btn-primary btn-play-card">Play Cyber Breaker</a>
+                    </div>
+                </article>
+                <article class="game-card">
+                    <div class="card-body">
+                        <span class="card-category">Puzzle &amp; Logic</span>
+                        <h3 class="card-title">Cyber Memory Match</h3>
+                        <p class="card-description">Test your cognitive recall with 3D neon flip cards, 3 difficulty tiers (12, 16, 20 cards), move tracking, and accuracy rankings.</p>
+                        <a href="games/memory-match/index.html" class="btn btn-primary btn-play-card">Play Memory Match</a>
+                    </div>
+                </article>
+            </noscript>
+        </section>
+
+        <!-- Features / Why Us Section -->
+        <section class="features-section" id="features">
+            <div class="section-header">
+                <span class="section-tag">High Performance Gaming</span>
+                <h2 class="section-title">Built Different for the Modern Web</h2>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Instant Browser Play</h3>
+                    <p>Loads in under a second with lightweight static code. No app store installs, no storage space taken, and zero wait time.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Phone, Tablet &amp; PC</h3>
+                    <p>Fully responsive with tailored touch gestures for mobile swiping and tight keyboard/mouse precision on desktop.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Privacy First</h3>
+                    <p>Zero third-party trackers, zero data harvesting, and no mandatory sign-ups. Your high scores are stored safely on your device.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔊</div>
+                    <h3>Procedural Web Audio</h3>
+                    <p>Every slice, bounce, chime, and explosion is synthesized live in your browser using the Web Audio API. Zero heavy audio downloads.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Site Footer -->
+    <footer class="site-footer">
+        <div class="footer-container">
+            <div class="footer-top">
+                <div class="footer-brand">
+                    <a href="index.html" class="site-logo">
+                        <span class="logo-icon">🕹️</span>
+                        <span class="logo-text">MINI GAME <span class="highlight">ARCADE</span></span>
+                    </a>
+                    <p class="footer-tagline">
+                        A modern open web collection of responsive, lightweight browser mini-games. Free to play anywhere.
+                    </p>
+                </div>
+
+                <nav class="footer-nav" aria-label="Footer Navigation">
+                    <div class="footer-col">
+                        <h4>Games</h4>
+                        <ul>
+                            <li><a href="games/fruit-slice/index.html">Fruit Slice Arcade</a></li>
+                            <li><a href="games/brick-breaker/index.html">Cyber Brick Breaker</a></li>
+                            <li><a href="games/memory-match/index.html">Cyber Memory Match</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="footer-col">
+                        <h4>Platform</h4>
+                        <ul>
+                            <li><a href="about.html">About the Arcade</a></li>
+                            <li><a href="contact.html">Contact Us</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="footer-col">
+                        <h4>Legal</h4>
+                        <ul>
+                            <li><a href="privacy.html">Privacy Policy</a></li>
+                            <li><a href="terms.html">Terms of Service</a></li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2026 Mini Game Arcade. Built with plain HTML5 Canvas &amp; Web Audio API.</p>
+                <p>Deployable statically on Vercel &bull; No cookies, no trackers</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/games-data.js"></script>
+    <script src="js/home.js"></script>
+</body>
+</html>
