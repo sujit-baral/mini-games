@@ -41,6 +41,11 @@
             </div>
 
             <div class="header-controls">
+                <button id="btn-shop-toggle" class="btn-shop-badge" aria-label="Arcade Rewards Shop" title="Customization & Rewards Shop" type="button">
+                    <span class="coin-icon">🪙</span>
+                    <span id="header-coins-counter" class="coin-count">200</span>
+                    <span class="shop-pill">SHOP</span>
+                </button>
                 <button id="btn-sound-toggle" class="btn-icon" aria-label="Toggle Sound" title="Toggle Sound (M)" type="button">
                     <span id="sound-icon">🔊</span>
                     <span id="sound-text" class="btn-label">Sound ON</span>
@@ -372,11 +377,48 @@
             </div>
         </div>
 
+        <!-- MODAL: REWARDS & CUSTOMIZATION SHOP -->
+        <div id="modal-shop" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="shop-modal-title">
+            <div class="modal-card modal-shop-card">
+                <div class="shop-header">
+                    <div class="shop-header-left">
+                        <div class="modal-icon shop-modal-icon">🛍️</div>
+                        <div>
+                            <h2 id="shop-modal-title" class="modal-title shop-title">Arcade Rewards Shop</h2>
+                            <p class="shop-subtitle">Customize your avatar, drawing board, and brush FX!</p>
+                        </div>
+                    </div>
+                    <div class="shop-header-right">
+                        <div class="shop-balance-display">
+                            <span class="coin-icon">🪙</span>
+                            <span id="shop-modal-coins-value" class="shop-balance-value">200</span>
+                            <span class="shop-balance-label">Coins</span>
+                        </div>
+                        <button id="btn-close-shop" class="tool-btn" type="button" aria-label="Close Shop">✕</button>
+                    </div>
+                </div>
+
+                <!-- Category Tabs -->
+                <div class="shop-tabs" role="tablist">
+                    <button class="shop-tab-btn active" data-category="avatars" type="button">🎭 Avatars</button>
+                    <button class="shop-tab-btn" data-category="themes" type="button">🖼️ Board Themes</button>
+                    <button class="shop-tab-btn" data-category="brushFx" type="button">✨ Brush FX</button>
+                    <button class="shop-tab-btn" data-category="titles" type="button">🏷️ Titles</button>
+                </div>
+
+                <!-- Catalog Grid -->
+                <div id="shop-items-grid" class="shop-items-grid">
+                    <!-- Populated dynamically by JS -->
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- PeerJS WebRTC Library for Peer-to-Peer Data Channels -->
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <!-- Game Scripts -->
+    <script src="../../js/rewards.js"></script>
     <script src="js/words.js"></script>
     <script src="js/audio.js"></script>
     <script src="js/p2p.js"></script>

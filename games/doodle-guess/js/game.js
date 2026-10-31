@@ -67,6 +67,7 @@ class DoodleGuessGame {
 
         this.initDOM();
         this.initCanvas();
+        this.applyBoardTheme();
         this.initEventListeners();
         this.checkUrlRoomParam();
     }
@@ -82,6 +83,24 @@ class DoodleGuessGame {
         this.modalRoundSummary = document.getElementById('modal-round-summary');
         this.modalGameOver = document.getElementById('modal-game-over');
         this.modalHelp = document.getElementById('modal-help');
+        this.modalShop = document.getElementById('modal-shop');
+
+        // Rewards & Shop
+        this.rewards = window.ArcadeRewards;
+        this.btnShopToggle = document.getElementById('btn-shop-toggle');
+        this.btnCloseShop = document.getElementById('btn-close-shop');
+        this.headerCoinsCounter = document.getElementById('header-coins-counter');
+        this.shopModalCoinsValue = document.getElementById('shop-modal-coins-value');
+        this.shopItemsGrid = document.getElementById('shop-items-grid');
+        this.shopTabButtons = document.querySelectorAll('.shop-tab-btn');
+        this.currentShopCategory = 'avatars';
+
+        if (this.rewards) {
+            this.rewards.subscribe(() => {
+                this.updateShopUI();
+            });
+            this.updateShopUI();
+        }
 
         // Drawing Toolbar
         this.toolbar = document.getElementById('canvas-toolbar');
@@ -185,7 +204,7 @@ class DoodleGuessGame {
             this.currentStroke = [{ x: rx, y: ry }];
             this.batchPoints = [rx, ry];
 
-            const color = this.isEraser ? '#0c101b' : this.brushColor;
+            const color = this.isEraser ? this.getCanvasBgColor() : this.brushColor;
             this.drawDot(rx, ry, color, this.brushSize);
 
             if (this.mode === 'MULTIPLAYER') {
@@ -220,7 +239,7 @@ class DoodleGuessGame {
             // Skip zero-movement duplicate samples
             if (rx === this.lastX && ry === this.lastY) return;
 
-            const color = this.isEraser ? '#0c101b' : this.brushColor;
+            const color = this.isEraser ? this.getCanvasBgColor() : this.brushColor;
 
             // Draw locally with zero latency
             this.drawLine(this.lastX, this.lastY, rx, ry, color, this.brushSize);
@@ -263,7 +282,7 @@ class DoodleGuessGame {
 
             if (this.currentStroke.length > 0) {
                 this.strokeHistory.push({
-                    color: this.isEraser ? '#0c101b' : this.brushColor,
+                    color: this.isEraser ? this.getCanvasBgColor() : this.brushColor,
                     size: this.brushSize,
                     points: this.currentStroke
                 });
@@ -283,7 +302,7 @@ class DoodleGuessGame {
             return;
         }
 
-        const color = this.isEraser ? '#0c101b' : this.brushColor;
+        const color = this.isEraser ? this.getCanvasBgColor() : this.brushColor;
         this.network.broadcast({
             type: 'DRAW_BATCH',
             points: this.batchPoints,
@@ -305,6 +324,13 @@ class DoodleGuessGame {
 
     drawDot(x, y, color, size) {
         this.ctx.save();
+        const brushFx = this.rewards ? this.rewards.getEquippedBrushFx() : null;
+        if (brushFx && brushFx.id === 'brush_glow' && !this.isEraser) {
+            this.ctx.shadowBlur = 10;
+            this.ctx.shadowColor = color;
+        } else {
+            this.ctx.shadowBlur = 0;
+        }
         this.ctx.fillStyle = color;
         this.ctx.beginPath();
         this.ctx.arc(x, y, size / 2, 0, Math.PI * 2);
@@ -314,6 +340,13 @@ class DoodleGuessGame {
 
     drawLine(x0, y0, x1, y1, color, size) {
         this.ctx.save();
+        const brushFx = this.rewards ? this.rewards.getEquippedBrushFx() : null;
+        if (brushFx && brushFx.id === 'brush_glow' && !this.isEraser) {
+            this.ctx.shadowBlur = 10;
+            this.ctx.shadowColor = color;
+        } else {
+            this.ctx.shadowBlur = 0;
+        }
         this.ctx.strokeStyle = color;
         this.ctx.lineWidth = size;
         this.ctx.lineCap = 'round';
@@ -457,14 +490,157 @@ class DoodleGuessGame {
         }
     }
 
+    getCanvasBgColor() {
+        if (this.rewards) {
+            const theme = this.rewards.getEquippedTheme();
+            if (theme && theme.bgColor) return theme.bgColor;
+        }
+        return '#0c101b';
+    }
+
+    applyBoardTheme() {
+        const container = document.querySelector('.canvas-container');
+        if (!container || !this.rewards) return;
+        const theme = this.rewards.getEquippedTheme();
+        const themeId = theme ? theme.id : 'theme_midnight';
+        container.classList.remove('theme-midnight', 'theme-chalkboard', 'theme-blueprint', 'theme-parchment', 'theme-synthwave');
+        container.classList.add(themeId.replace('_', '-'));
+        this.clearCanvas(false);
+        this.redrawHistory();
+    }
+
     clearCanvas(broadcast = true) {
         this.ctx.save();
-        this.ctx.fillStyle = '#0c101b';
+        this.ctx.fillStyle = this.getCanvasBgColor();
         this.ctx.fillRect(0, 0, this.logicalWidth, this.logicalHeight);
         this.ctx.restore();
 
         if (broadcast && this.canDraw && this.mode === 'MULTIPLAYER') {
             this.network.broadcast({ type: 'CLEAR_CANVAS' });
+        }
+    }
+
+    /* ----------------------------------------------------
+       REWARDS & CUSTOMIZATION SHOP UI
+    ---------------------------------------------------- */
+    openShop() {
+        this.sound.init();
+        this.sound.playUiClick();
+        this.updateShopUI();
+        this.renderShopItems();
+        this.modalShop?.classList.remove('hidden');
+    }
+
+    closeShop() {
+        this.sound.playUiClick();
+        this.modalShop?.classList.add('hidden');
+    }
+
+    updateShopUI() {
+        if (!this.rewards) return;
+        const coins = this.rewards.getCoins();
+        if (this.headerCoinsCounter) this.headerCoinsCounter.textContent = coins.toLocaleString();
+        if (this.shopModalCoinsValue) this.shopModalCoinsValue.textContent = coins.toLocaleString();
+    }
+
+    renderShopItems() {
+        if (!this.rewards || !this.shopItemsGrid) return;
+        this.shopItemsGrid.innerHTML = '';
+        const items = this.rewards.catalog[this.currentShopCategory] || [];
+        const equipped = this.rewards.getEquipped(this.currentShopCategory);
+        const equippedId = equipped ? equipped.id : null;
+        const currentCoins = this.rewards.getCoins();
+
+        items.forEach(item => {
+            const isUnlocked = this.rewards.isUnlocked(item.id);
+            const isEquipped = (item.id === equippedId);
+            const canAfford = currentCoins >= item.price;
+
+            const card = document.createElement('div');
+            card.className = `shop-item-card ${isEquipped ? 'is-equipped' : ''}`;
+
+            let buttonHtml = '';
+            if (isEquipped) {
+                buttonHtml = `<button class="btn-shop-action btn-equipped" disabled>Equipped</button>`;
+            } else if (isUnlocked) {
+                buttonHtml = `<button class="btn-shop-action btn-equip" data-action="equip" data-id="${item.id}" data-category="${this.currentShopCategory}">Equip</button>`;
+            } else {
+                const disabled = !canAfford ? 'disabled' : '';
+                buttonHtml = `<button class="btn-shop-action btn-buy" data-action="buy" data-id="${item.id}" ${disabled}>🪙 ${item.price}</button>`;
+            }
+
+            const iconBoxStyle = item.bgColor ? `background: ${item.bgColor}; border: 2px solid ${item.borderColor || '#444'};` : '';
+
+            card.innerHTML = `
+                <div class="shop-item-top">
+                    <div class="shop-item-icon-box" style="${iconBoxStyle}">
+                        ${item.icon || '✨'}
+                    </div>
+                    <div class="shop-item-info">
+                        <h4 class="shop-item-title">${this.escapeHTML(item.name)}</h4>
+                        <p class="shop-item-desc">${this.escapeHTML(item.description)}</p>
+                    </div>
+                </div>
+                <div class="shop-item-action-row">
+                    <span class="shop-item-price-tag ${item.price === 0 ? 'free' : ''}">
+                        ${item.price === 0 ? 'Free' : '🪙 ' + item.price}
+                    </span>
+                    ${buttonHtml}
+                </div>
+            `;
+
+            this.shopItemsGrid.appendChild(card);
+        });
+
+        // Event delegation for Shop actions
+        this.shopItemsGrid.querySelectorAll('.btn-shop-action').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const action = btn.dataset.action;
+                const itemId = btn.dataset.id;
+                const category = btn.dataset.category || this.currentShopCategory;
+
+                if (action === 'buy') {
+                    const result = this.rewards.buyItem(itemId);
+                    if (result.success) {
+                        this.sound.playBuySuccess();
+                        this.showNotification(`🎉 Purchased ${result.item.name}!`, 'success');
+                        this.applyCustomizationEffects();
+                        this.updateShopUI();
+                        this.renderShopItems();
+                    } else {
+                        this.showNotification(result.error || 'Cannot afford item', 'error');
+                    }
+                } else if (action === 'equip') {
+                    const result = this.rewards.equipItem(category, itemId);
+                    if (result.success) {
+                        this.sound.playEquip();
+                        this.showNotification(`Equipped item!`, 'success');
+                        this.applyCustomizationEffects();
+                        this.updateShopUI();
+                        this.renderShopItems();
+                    }
+                }
+            });
+        });
+    }
+
+    applyCustomizationEffects() {
+        this.applyBoardTheme();
+        this.updateLobbyPlayerList();
+        this.updateLeaderboard();
+        // Update network player object
+        if (this.network && this.rewards) {
+            const me = this.players.find(p => p.id === this.network.playerId);
+            if (me) {
+                me.avatar = this.rewards.getEquippedAvatar();
+                me.title = this.rewards.getEquippedTitle();
+                if (this.network.isHost) {
+                    this.network.broadcast({
+                        type: 'SYNC_PLAYERS',
+                        players: this.players
+                    });
+                }
+            }
         }
     }
 
@@ -532,6 +708,24 @@ class DoodleGuessGame {
         });
         document.getElementById('btn-close-help')?.addEventListener('click', () => {
             this.modalHelp.classList.add('hidden');
+        });
+
+        // Rewards & Shop Modal
+        this.btnShopToggle?.addEventListener('click', () => {
+            this.openShop();
+        });
+        this.btnCloseShop?.addEventListener('click', () => {
+            this.closeShop();
+        });
+
+        this.shopTabButtons?.forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.sound.playUiClick();
+                this.shopTabButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.currentShopCategory = btn.dataset.category || 'avatars';
+                this.renderShopItems();
+            });
         });
 
         // Menu Mode Tabs
@@ -809,6 +1003,8 @@ class DoodleGuessGame {
         this.players = [{
             id: this.network.playerId,
             name: this.network.playerName || 'PixelArtist',
+            avatar: this.rewards ? this.rewards.getEquippedAvatar() : '🎮',
+            title: this.rewards ? this.rewards.getEquippedTitle() : 'Rookie Doodler',
             score: 0,
             isHost: true,
             hasGuessed: false
@@ -863,8 +1059,11 @@ class DoodleGuessGame {
             const item = document.createElement('div');
             item.className = 'lobby-player-card';
             item.innerHTML = `
-                <span class="player-avatar">🎮</span>
-                <span class="player-name">${this.escapeHTML(p.name)}</span>
+                <span class="player-avatar">${p.avatar || '🎮'}</span>
+                <span class="player-name">
+                    ${this.escapeHTML(p.name)}
+                    ${p.title ? `<span class="player-title-badge">${this.escapeHTML(p.title)}</span>` : ''}
+                </span>
                 ${p.isHost ? '<span class="badge-host">HOST</span>' : ''}
             `;
             list.appendChild(item);
@@ -1079,6 +1278,18 @@ class DoodleGuessGame {
 
         this.modalGameOver.classList.remove('hidden');
         this.sound.playCorrectGuess();
+
+        if (this.rewards) {
+            if (winner && this.network.playerId === winner.id) {
+                this.rewards.addCoins(150, '1st place match champion!');
+                this.sound.playCoinReward();
+                this.showNotification('🏆 +150 Coins for Match Victory!', 'success');
+            } else if (sorted[1] && this.network.playerId === sorted[1].id) {
+                this.rewards.addCoins(75, '2nd place runner-up!');
+                this.sound.playCoinReward();
+                this.showNotification('🥈 +75 Coins Runner-up Bonus!', 'success');
+            }
+        }
     }
 
     /* ----------------------------------------------------
@@ -1093,6 +1304,8 @@ class DoodleGuessGame {
                         this.players.push({
                             id: data.playerId,
                             name: data.name,
+                            avatar: data.avatar || '🎮',
+                            title: data.title || 'Rookie Doodler',
                             score: 0,
                             isHost: false,
                             hasGuessed: false
@@ -1193,6 +1406,12 @@ class DoodleGuessGame {
                 this.sound.playCorrectGuess();
                 this.addChatMessage('correct', `🎉 ${data.guesserName} guessed the word! (+${data.pointsAwarded} pts)`);
 
+                if (this.network.playerId === this.currentDrawerId && this.rewards) {
+                    this.rewards.addCoins(25, 'Drawing was guessed!');
+                    this.sound.playCoinReward();
+                    this.showNotification('🪙 +25 Coins (Artist Bonus)!', 'success');
+                }
+
                 if (this.network.isHost) {
                     const guessers = this.players.filter(p => p.id !== this.currentDrawerId);
                     if (guessers.length > 0 && guessers.every(g => g.hasGuessed)) {
@@ -1285,6 +1504,12 @@ class DoodleGuessGame {
                 this.addChatMessage('correct', `🎉 You guessed the word! (+${points} pts)`);
                 this.updateLeaderboard();
 
+                if (this.rewards) {
+                    this.rewards.addCoins(50, 'Correct guess: ' + this.currentWord);
+                    this.sound.playCoinReward();
+                    this.showNotification('🪙 +50 Coins Earned!', 'success');
+                }
+
                 // Check if all non-drawers have guessed
                 const guessers = this.players.filter(p => p.id !== this.currentDrawerId);
                 if (guessers.every(g => g.hasGuessed)) {
@@ -1345,8 +1570,11 @@ class DoodleGuessGame {
             card.innerHTML = `
                 <div class="score-card-left">
                     <span class="player-rank">#${idx + 1}</span>
-                    <span class="player-avatar">${p.id === this.currentDrawerId ? '✏️' : '🎮'}</span>
-                    <span class="player-name">${this.escapeHTML(p.name)}</span>
+                    <span class="player-avatar">${p.id === this.currentDrawerId ? '✏️' : (p.avatar || '🎮')}</span>
+                    <span class="player-name">
+                        ${this.escapeHTML(p.name)}
+                        ${p.title ? `<span class="player-title-badge">${this.escapeHTML(p.title)}</span>` : ''}
+                    </span>
                 </div>
                 <span class="player-score">${p.score} pts</span>
             `;
@@ -1367,6 +1595,8 @@ class DoodleGuessGame {
         this.players = [{
             id: 'solo_player',
             name: 'You',
+            avatar: this.rewards ? this.rewards.getEquippedAvatar() : '🎮',
+            title: this.rewards ? this.rewards.getEquippedTitle() : 'Rookie Doodler',
             score: 0,
             isHost: true,
             hasGuessed: false
@@ -1480,6 +1710,12 @@ class DoodleGuessGame {
             this.sound.playCorrectGuess();
             this.addChatMessage('correct', `🎉 Correct! It was ${this.currentWord}! (+${points} pts)`);
             this.updateLeaderboard();
+
+            if (this.rewards) {
+                this.rewards.addCoins(30, 'Solo word solved: ' + this.currentWord);
+                this.sound.playCoinReward();
+                this.showNotification('🪙 +30 Coins Earned!', 'success');
+            }
 
             setTimeout(() => {
                 this.roundNumber++;

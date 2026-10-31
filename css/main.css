@@ -140,6 +140,39 @@ body {
     background: rgba(0, 229, 255, 0.08);
 }
 
+.header-coin-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    border-radius: var(--radius-full);
+    padding: 0.35rem 0.75rem;
+    color: #fbbf24;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    margin-left: 0.5rem;
+}
+
+.header-coin-badge:hover {
+    background: rgba(245, 158, 11, 0.22);
+    border-color: #fbbf24;
+    transform: translateY(-1px);
+    box-shadow: 0 0 14px rgba(245, 158, 11, 0.3);
+}
+
+.header-coin-badge .coin-label {
+    background: #f59e0b;
+    color: #0b0f19;
+    font-size: 0.65rem;
+    font-weight: 900;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+}
+
 /* Buttons */
 .btn {
     display: inline-flex;

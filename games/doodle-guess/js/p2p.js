@@ -132,13 +132,21 @@ class DoodleP2PNetwork {
 
                     this.hostConn = conn;
 
-                    conn.on('open', () => {
-                        this.isP2pReady = true;
-                        conn.send({
+                    const getJoinPayload = () => {
+                        const avatar = window.ArcadeRewards ? window.ArcadeRewards.getEquippedAvatar() : '🎮';
+                        const title = window.ArcadeRewards ? window.ArcadeRewards.getEquippedTitle() : 'Rookie Doodler';
+                        return {
                             type: 'PLAYER_JOIN',
                             playerId: this.playerId,
-                            name: this.playerName
-                        });
+                            name: this.playerName,
+                            avatar: avatar,
+                            title: title
+                        };
+                    };
+
+                    conn.on('open', () => {
+                        this.isP2pReady = true;
+                        conn.send(getJoinPayload());
                         if (this.callbacks.onJoinSuccess) {
                             this.callbacks.onJoinSuccess(this.roomCode);
                         }
@@ -157,31 +165,43 @@ class DoodleP2PNetwork {
 
                 this.peer.on('error', (err) => {
                     console.warn('PeerJS Guest notice:', err);
+                    const avatar = window.ArcadeRewards ? window.ArcadeRewards.getEquippedAvatar() : '🎮';
+                    const title = window.ArcadeRewards ? window.ArcadeRewards.getEquippedTitle() : 'Rookie Doodler';
                     // BroadcastChannel fallback if same machine
                     this.broadcastToLocal({
                         type: 'PLAYER_JOIN',
                         playerId: this.playerId,
-                        name: this.playerName
+                        name: this.playerName,
+                        avatar: avatar,
+                        title: title
                     });
                     if (this.callbacks.onJoinSuccess) {
                         this.callbacks.onJoinSuccess(this.roomCode);
                     }
                 });
             } catch (e) {
+                const avatar = window.ArcadeRewards ? window.ArcadeRewards.getEquippedAvatar() : '🎮';
+                const title = window.ArcadeRewards ? window.ArcadeRewards.getEquippedTitle() : 'Rookie Doodler';
                 this.broadcastToLocal({
                     type: 'PLAYER_JOIN',
                     playerId: this.playerId,
-                    name: this.playerName
+                    name: this.playerName,
+                    avatar: avatar,
+                    title: title
                 });
                 if (this.callbacks.onJoinSuccess) {
                     this.callbacks.onJoinSuccess(this.roomCode);
                 }
             }
         } else {
+            const avatar = window.ArcadeRewards ? window.ArcadeRewards.getEquippedAvatar() : '🎮';
+            const title = window.ArcadeRewards ? window.ArcadeRewards.getEquippedTitle() : 'Rookie Doodler';
             this.broadcastToLocal({
                 type: 'PLAYER_JOIN',
                 playerId: this.playerId,
-                name: this.playerName
+                name: this.playerName,
+                avatar: avatar,
+                title: title
             });
             if (this.callbacks.onJoinSuccess) {
                 this.callbacks.onJoinSuccess(this.roomCode);

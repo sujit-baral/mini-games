@@ -40,6 +40,17 @@ class ArcadeHomeController {
 
         // Initial render
         this.render();
+        this.updateRewardsUI();
+    }
+
+    updateRewardsUI() {
+        const counter = document.getElementById('home-coins-counter');
+        if (counter && window.ArcadeRewards) {
+            counter.textContent = window.ArcadeRewards.getCoins().toLocaleString();
+            window.ArcadeRewards.subscribe((state) => {
+                counter.textContent = (state.coins || 0).toLocaleString();
+            });
+        }
     }
 
     getFilteredGames() {
