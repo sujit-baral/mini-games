@@ -43,3 +43,4 @@ CREATE TABLE IF NOT EXISTS reward_transactions (
 CREATE INDEX IF NOT EXISTS idx_users_coins ON arcade_users(coins DESC);
 CREATE INDEX IF NOT EXISTS idx_inventory_user ON user_inventory(user_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_user ON reward_transactions(user_id, created_at DESC);
+

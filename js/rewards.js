@@ -281,3 +281,4 @@
 
     return new RewardsManager();
 }));
+
