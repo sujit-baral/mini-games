@@ -327,53 +327,77 @@ class DoodleGuessGame {
         // Host / Join sub-toggle
         const subHost = document.getElementById('sub-tab-host');
         const subJoin = document.getElementById('sub-tab-join');
-        const formHost = document.getElementById('panel-host');
-        const formJoin = document.getElementById('panel-join');
+        const formHost = document.getElementById('form-host-room') || document.getElementById('panel-host');
+        const formJoin = document.getElementById('form-join-room') || document.getElementById('panel-join');
 
         subHost?.addEventListener('click', () => {
             subHost.classList.add('active');
             subJoin.classList.remove('active');
-            formHost.classList.remove('hidden');
-            formJoin.classList.add('hidden');
+            formHost?.classList.remove('hidden');
+            formJoin?.classList.add('hidden');
             this.sound.playUiClick();
         });
 
         subJoin?.addEventListener('click', () => {
             subJoin.classList.add('active');
             subHost.classList.remove('active');
-            formJoin.classList.remove('hidden');
-            formHost.classList.add('hidden');
+            formJoin?.classList.remove('hidden');
+            formHost?.classList.add('hidden');
             this.sound.playUiClick();
         });
 
-        // Host Form Submit
-        document.getElementById('form-host-room')?.addEventListener('submit', (e) => {
-            e.preventDefault();
+        // Host Form Submit & Button Click
+        const handleHostRoom = (e) => {
+            if (e) e.preventDefault();
             this.sound.init();
-            const name = document.getElementById('host-player-name').value.trim() || 'Player 1';
-            const rounds = parseInt(document.getElementById('host-rounds').value, 10) || 3;
-            const drawTime = parseInt(document.getElementById('host-draw-time').value, 10) || 60;
+            const nameInput = document.getElementById('host-player-name');
+            const name = (nameInput && nameInput.value.trim()) || 'PixelArtist';
+            const roundsEl = document.getElementById('host-rounds');
+            const drawTimeEl = document.getElementById('host-draw-time');
+            const rounds = parseInt(roundsEl?.value, 10) || 3;
+            const drawTime = parseInt(drawTimeEl?.value, 10) || 60;
             this.maxRounds = rounds;
             this.roundDuration = drawTime;
 
             const roomCode = this.generateRoomCode();
+            this.network.playerName = name;
+            this.network.roomCode = roomCode;
+
+            // Instantly transition to the lobby screen so user gets immediate visual feedback!
+            this.onHostRoomReady(roomCode, name);
+
+            // Connect networking in background
             this.network.createRoom(roomCode, name);
+        };
+
+        const hostForm = document.getElementById('form-host-room') || document.getElementById('panel-host');
+        hostForm?.addEventListener('submit', handleHostRoom);
+        document.getElementById('btn-submit-host')?.addEventListener('click', (e) => {
+            handleHostRoom(e);
         });
 
-        // Join Form Submit
-        document.getElementById('form-join-room')?.addEventListener('submit', (e) => {
-            e.preventDefault();
+        // Join Form Submit & Button Click
+        const handleJoinRoom = (e) => {
+            if (e) e.preventDefault();
             this.sound.init();
-            const name = document.getElementById('join-player-name').value.trim() || 'Guesser';
-            const code = document.getElementById('join-room-code').value.trim().toUpperCase();
+            const nameInput = document.getElementById('join-player-name');
+            const name = (nameInput && nameInput.value.trim()) || 'Guesser';
+            const codeInput = document.getElementById('join-room-code');
+            const code = (codeInput && codeInput.value.trim().toUpperCase()) || '';
 
             if (!code || code.length < 3) {
-                this.showNotification('Please enter a valid room code!', 'error');
+                this.showNotification('Please enter a valid room code (e.g. DG849)!', 'error');
                 return;
             }
 
             this.showNotification(`Connecting to room ${code}...`, 'info');
             this.network.joinRoom(code, name);
+        };
+
+        const joinForm = document.getElementById('form-join-room') || document.getElementById('panel-join');
+        joinForm?.addEventListener('submit', handleJoinRoom);
+        document.getElementById('btn-submit-join')?.addEventListener('click', (e) => {
+            handleJoinRoom(e);
         });
 
         // Start Solo Challenge
@@ -524,11 +548,12 @@ class DoodleGuessGame {
     /* ----------------------------------------------------
        LOBBY & MULTIPLAYER FLOW
     ---------------------------------------------------- */
-    onHostRoomReady(roomCode) {
+    onHostRoomReady(roomCode, hostName) {
         this.mode = 'MULTIPLAYER';
+        if (hostName) this.network.playerName = hostName;
         this.players = [{
             id: this.network.playerId,
-            name: this.network.playerName,
+            name: this.network.playerName || 'PixelArtist',
             score: 0,
             isHost: true,
             hasGuessed: false

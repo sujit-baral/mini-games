@@ -46,11 +46,23 @@ class DoodleP2PNetwork {
                     }
                 });
 
-                this.peer.on('open', (id) => {
-                    this.isP2pReady = true;
+                let hostReadyTriggered = false;
+                const markReady = (id) => {
+                    if (hostReadyTriggered) return;
+                    hostReadyTriggered = true;
                     if (this.callbacks.onHostReady) {
                         this.callbacks.onHostReady(this.roomCode, id);
                     }
+                };
+
+                // Fallback timer: ensure host lobby activates within 2.5s even if STUN/signaling lags
+                setTimeout(() => {
+                    markReady('local-' + this.roomCode);
+                }, 2500);
+
+                this.peer.on('open', (id) => {
+                    this.isP2pReady = true;
+                    markReady(id);
                 });
 
                 this.peer.on('connection', (conn) => {
@@ -59,13 +71,12 @@ class DoodleP2PNetwork {
 
                 this.peer.on('error', (err) => {
                     console.warn('PeerJS Host notice:', err);
-                    // If ID taken or peer server issue, fallback to broadcast channel mode
                     if (err.type === 'unavailable-id') {
                         if (this.callbacks.onHostError) {
                             this.callbacks.onHostError('Room code already in use. Please choose another or re-host.');
                         }
-                    } else if (this.callbacks.onHostReady) {
-                        this.callbacks.onHostReady(this.roomCode, 'local-' + this.roomCode);
+                    } else {
+                        markReady('local-' + this.roomCode);
                     }
                 });
             } catch (e) {
@@ -148,6 +159,9 @@ class DoodleP2PNetwork {
                         playerId: this.playerId,
                         name: this.playerName
                     });
+                    if (this.callbacks.onJoinSuccess) {
+                        this.callbacks.onJoinSuccess(this.roomCode);
+                    }
                 });
             } catch (e) {
                 this.broadcastToLocal({
@@ -155,6 +169,9 @@ class DoodleP2PNetwork {
                     playerId: this.playerId,
                     name: this.playerName
                 });
+                if (this.callbacks.onJoinSuccess) {
+                    this.callbacks.onJoinSuccess(this.roomCode);
+                }
             }
         } else {
             this.broadcastToLocal({
@@ -162,6 +179,9 @@ class DoodleP2PNetwork {
                 playerId: this.playerId,
                 name: this.playerName
             });
+            if (this.callbacks.onJoinSuccess) {
+                this.callbacks.onJoinSuccess(this.roomCode);
+            }
         }
     }
 

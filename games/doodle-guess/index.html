@@ -82,10 +82,10 @@
                     </div>
 
                     <!-- Panel: Host Room -->
-                    <form id="panel-host" class="form-container">
+                    <form id="form-host-room" class="form-container">
                         <div class="form-group">
                             <label for="host-player-name" class="form-label">Your Nickname</label>
-                            <input type="text" id="host-player-name" class="form-input" placeholder="e.g. PixelArtist" maxlength="15" required>
+                            <input type="text" id="host-player-name" class="form-input" placeholder="e.g. PixelArtist" value="PixelArtist" maxlength="15">
                         </div>
                         <div class="form-row">
                             <div class="form-group">
@@ -105,22 +105,22 @@
                                 </select>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary btn-block">
+                        <button type="submit" id="btn-submit-host" class="btn btn-primary btn-block">
                             <span>🚀 Create Private Room</span>
                         </button>
                     </form>
 
                     <!-- Panel: Join Room -->
-                    <form id="panel-join" class="form-container hidden">
+                    <form id="form-join-room" class="form-container hidden">
                         <div class="form-group">
                             <label for="join-player-name" class="form-label">Your Nickname</label>
-                            <input type="text" id="join-player-name" class="form-input" placeholder="e.g. MasterGuesser" maxlength="15" required>
+                            <input type="text" id="join-player-name" class="form-input" placeholder="e.g. MasterGuesser" value="Guesser" maxlength="15">
                         </div>
                         <div class="form-group">
                             <label for="join-room-code" class="form-label">Room Code</label>
-                            <input type="text" id="join-room-code" class="form-input" placeholder="e.g. DG849" maxlength="6" style="text-transform: uppercase;" required>
+                            <input type="text" id="join-room-code" class="form-input" placeholder="e.g. DG849" maxlength="6" style="text-transform: uppercase;">
                         </div>
-                        <button type="submit" class="btn btn-primary btn-block">
+                        <button type="submit" id="btn-submit-join" class="btn btn-primary btn-block">
                             <span>🎮 Join Room</span>
                         </button>
                     </form>
