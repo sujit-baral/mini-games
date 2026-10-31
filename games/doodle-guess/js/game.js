@@ -119,11 +119,40 @@ class DoodleGuessGame {
 
         const getCoords = (e) => {
             const rect = canvas.getBoundingClientRect();
-            const scaleX = this.logicalWidth / rect.width;
-            const scaleY = this.logicalHeight / rect.height;
+            if (!rect.width || !rect.height) {
+                return { x: 0, y: 0 };
+            }
+
+            // Calculate rendered canvas dimensions & pillarbox/letterbox offsets caused by object-fit: contain
+            const canvasAspect = this.logicalWidth / this.logicalHeight;
+            const rectAspect = rect.width / rect.height;
+            let renderW = rect.width;
+            let renderH = rect.height;
+            let offsetX = 0;
+            let offsetY = 0;
+
+            if (rectAspect > canvasAspect) {
+                // Pillarbox: container is wider than 800:550; letterboxing on left and right
+                renderW = rect.height * canvasAspect;
+                offsetX = (rect.width - renderW) / 2;
+            } else if (rectAspect < canvasAspect) {
+                // Letterbox: container is taller than 800:550; letterboxing on top and bottom
+                renderH = rect.width / canvasAspect;
+                offsetY = (rect.height - renderH) / 2;
+            }
+
+            const scaleX = this.logicalWidth / renderW;
+            const scaleY = this.logicalHeight / renderH;
+
+            const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+            const clientY = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+
+            const x = (clientX - rect.left - offsetX) * scaleX;
+            const y = (clientY - rect.top - offsetY) * scaleY;
+
             return {
-                x: (e.clientX - rect.left) * scaleX,
-                y: (e.clientY - rect.top) * scaleY
+                x: Math.max(0, Math.min(this.logicalWidth, x)),
+                y: Math.max(0, Math.min(this.logicalHeight, y))
             };
         };
 
@@ -131,6 +160,12 @@ class DoodleGuessGame {
             if (!this.canDraw) return;
             if (e.cancelable) e.preventDefault();
             this.sound.init();
+
+            if (e.pointerId !== undefined && canvas.setPointerCapture) {
+                try {
+                    canvas.setPointerCapture(e.pointerId);
+                } catch (err) {}
+            }
 
             const coords = getCoords(e);
             const rx = Math.round(coords.x);
@@ -207,10 +242,18 @@ class DoodleGuessGame {
             }
         };
 
-        const endDraw = () => {
+        const endDraw = (e) => {
             if (!this.isDrawing) return;
             this.isDrawing = false;
             clearInterval(this.batchFlushTimer);
+
+            if (e && e.pointerId !== undefined && canvas.releasePointerCapture) {
+                try {
+                    if (canvas.hasPointerCapture(e.pointerId)) {
+                        canvas.releasePointerCapture(e.pointerId);
+                    }
+                } catch (err) {}
+            }
 
             // Flush any remaining coordinates in the batch
             if (this.mode === 'MULTIPLAYER' && this.batchPoints.length >= 4) {

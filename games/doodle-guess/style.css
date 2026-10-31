@@ -1054,7 +1054,7 @@ body {
     }
 
     .canvas-container {
-        aspect-ratio: 800 / 520;
+        aspect-ratio: 800 / 550;
         max-height: 38vh;
         min-height: 180px;
         flex: none;
