@@ -153,6 +153,36 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Strategy & Content Depth Section (On Menu Screen) -->
+            <section class="game-info-article" style="margin-top: 2rem; max-width: 600px; width: 100%; background: var(--bg-card); border: 1px solid var(--border-card); border-radius: var(--radius-md); padding: 1.8rem; color: var(--text-muted); line-height: 1.6; text-align: left;">
+                <h2 style="color: var(--text-main); font-family: var(--font-heading); font-size: 1.3rem; margin-bottom: 0.8rem;">How to Play Doodle Guess Arcade</h2>
+                <p style="margin-bottom: 1rem;">
+                    <strong>Doodle Guess Arcade</strong> is a fast-paced multiplayer drawing and word-guessing game built exclusively with modern open web platform primitives (HTML5 Canvas 2D, Web Audio API, and WebRTC Peer-to-Peer data channels). Connect with friends anywhere across mobile and desktop with zero account registrations or software downloads!
+                </p>
+
+                <div style="display: grid; grid-template-columns: 1fr; gap: 0.8rem; margin-bottom: 1.5rem;">
+                    <div style="background: rgba(0,0,0,0.3); padding: 0.9rem; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.08);">
+                        <h3 style="color: var(--color-primary); font-size: 0.95rem; margin-bottom: 0.3rem;">✏️ The Drawer</h3>
+                        <p style="font-size: 0.85rem;">When it is your turn, choose 1 of 3 secret words. Draw visual clues on the canvas without writing letters, numbers, or spelling the word out. The faster your friends guess, the more bonus points you earn!</p>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.3); padding: 0.9rem; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.08);">
+                        <h3 style="color: var(--color-secondary); font-size: 0.95rem; margin-bottom: 0.3rem;">🔍 The Guessers</h3>
+                        <p style="font-size: 0.85rem;">Watch the canvas closely as strokes appear in real-time. Type your answers into the guess chat. Letter hints reveal themselves as the round clock counts down. The first player to guess correctly gets the top score!</p>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.3); padding: 0.9rem; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.08);">
+                        <h3 style="color: var(--color-accent); font-size: 0.95rem; margin-bottom: 0.3rem;">🌐 Peer-to-Peer Networking</h3>
+                        <p style="font-size: 0.85rem;">Multiplayer matches run directly browser-to-browser via WebRTC data channels. Your drawing coordinates stream with sub-50ms latency without uploading any sketches to third-party databases.</p>
+                    </div>
+                </div>
+
+                <h3 style="color: var(--text-main); font-size: 1.05rem; margin-bottom: 0.5rem;">Scoring Breakdown</h3>
+                <ul style="padding-left: 1.2rem; font-size: 0.85rem; margin-bottom: 0;">
+                    <li><strong>Guesser Score:</strong> 100 base points + (Remaining seconds &times; 5). Early guesses earn up to 400 points!</li>
+                    <li><strong>Drawer Bonus:</strong> +50 points for each player in the room who successfully guesses your drawing.</li>
+                    <li><strong>Solo Bot Mode:</strong> Test your skills solo! CyberBot draws procedural sketches while you race the 45-second clock.</li>
+                </ul>
+            </section>
         </main>
 
         <!-- 2. ROOM LOBBY SCREEN (WAITING FOR PLAYERS) -->
@@ -285,36 +315,6 @@
                 </aside>
 
             </div>
-
-            <!-- Strategy & Content Depth Section (Below game arena) -->
-            <section class="game-info-article" style="margin-top: 2rem; background: var(--bg-card); border: 1px solid var(--border-card); border-radius: var(--radius-md); padding: 1.8rem; color: var(--text-muted); line-height: 1.6;">
-                <h2 style="color: var(--text-main); font-family: var(--font-heading); font-size: 1.3rem; margin-bottom: 0.8rem;">How to Play Doodle Guess Arcade</h2>
-                <p style="margin-bottom: 1rem;">
-                    <strong>Doodle Guess Arcade</strong> is a fast-paced multiplayer drawing and word-guessing game built exclusively with modern open web platform primitives (HTML5 Canvas 2D, Web Audio API, and WebRTC Peer-to-Peer data channels). Connect with friends anywhere across mobile and desktop with zero account registrations or software downloads!
-                </p>
-
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-                    <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.08);">
-                        <h3 style="color: var(--color-primary); font-size: 1rem; margin-bottom: 0.4rem;">✏️ The Drawer</h3>
-                        <p style="font-size: 0.85rem;">When it is your turn, choose 1 of 3 secret words. Draw visual clues on the canvas without writing letters, numbers, or spelling the word out. The faster your friends guess, the more bonus points you earn!</p>
-                    </div>
-                    <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.08);">
-                        <h3 style="color: var(--color-secondary); font-size: 1rem; margin-bottom: 0.4rem;">🔍 The Guessers</h3>
-                        <p style="font-size: 0.85rem;">Watch the canvas closely as strokes appear in real-time. Type your answers into the guess chat. Letter hints reveal themselves as the round clock counts down. The first player to guess correctly gets the top score!</p>
-                    </div>
-                    <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.08);">
-                        <h3 style="color: var(--color-accent); font-size: 1rem; margin-bottom: 0.4rem;">🌐 Peer-to-Peer Networking</h3>
-                        <p style="font-size: 0.85rem;">Multiplayer matches run directly browser-to-browser via WebRTC data channels. Your drawing coordinates stream with sub-50ms latency without uploading any sketches to third-party databases.</p>
-                    </div>
-                </div>
-
-                <h3 style="color: var(--text-main); font-size: 1.05rem; margin-bottom: 0.5rem;">Scoring Breakdown</h3>
-                <ul style="padding-left: 1.2rem; font-size: 0.85rem; margin-bottom: 1rem;">
-                    <li><strong>Guesser Score:</strong> 100 base points + (Remaining seconds &times; 5). Early guesses earn up to 400 points!</li>
-                    <li><strong>Drawer Bonus:</strong> +50 points for each player in the room who successfully guesses your drawing.</li>
-                    <li><strong>Solo Bot Mode:</strong> Test your skills solo! CyberBot draws procedural sketches while you race the 45-second clock.</li>
-                </ul>
-            </section>
         </div>
 
         <!-- MODAL: WORD SELECTION (DRAWER ONLY) -->

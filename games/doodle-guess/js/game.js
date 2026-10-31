@@ -744,6 +744,7 @@ class DoodleGuessGame {
         if (isMeDrawer) {
             this.wordHintDisplay.textContent = this.currentWord;
             this.wordHintDisplay.classList.add('word-revealed');
+            this.drawerStatusText.textContent = '✏️ You are drawing!';
         } else {
             this.wordHintDisplay.classList.remove('word-revealed');
             const letters = this.currentWord.split('');
@@ -753,6 +754,9 @@ class DoodleGuessGame {
                 return '_';
             }).join(' ');
             this.wordHintDisplay.textContent = display;
+            const wordLen = this.currentWord.replace(/\s+/g, '').length;
+            const drawer = this.players.find(p => p.id === this.currentDrawerId);
+            this.drawerStatusText.textContent = `${drawer ? drawer.name : 'Player'} is drawing (${wordLen} letters)`;
         }
     }
 
