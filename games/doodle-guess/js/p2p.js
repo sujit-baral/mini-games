@@ -41,6 +41,8 @@ class DoodleP2PNetwork {
                     config: {
                         iceServers: [
                             { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:stun1.l.google.com:19302' },
+                            { urls: 'stun:stun2.l.google.com:19302' },
                             { urls: 'stun:global.stun.twilio.com:3478' }
                         ]
                     }
@@ -112,6 +114,8 @@ class DoodleP2PNetwork {
                     config: {
                         iceServers: [
                             { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:stun1.l.google.com:19302' },
+                            { urls: 'stun:stun2.l.google.com:19302' },
                             { urls: 'stun:global.stun.twilio.com:3478' }
                         ]
                     }
@@ -256,7 +260,12 @@ class DoodleP2PNetwork {
 
         // If Host receives data from a guest, relay game-relevant packets to all other guests
         if (this.isHost && fromConn) {
-            if (['DRAW_STROKE', 'CLEAR_CANVAS', 'CHAT_MESSAGE'].includes(data.type)) {
+            const relayTypes = [
+                'DRAW_BATCH', 'DRAW_DOT', 'DRAW_LINE', 
+                'CLEAR_CANVAS', 'UNDO_STROKE', 
+                'CHAT_MESSAGE', 'CORRECT_GUESS_BROADCAST'
+            ];
+            if (relayTypes.includes(data.type)) {
                 this.connections.forEach(conn => {
                     if (conn !== fromConn && conn.open) {
                         try {

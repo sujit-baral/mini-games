@@ -49,6 +49,8 @@ class DoodleGuessGame {
         this.lastY = 0;
         this.strokeHistory = []; // For Undo
         this.currentStroke = [];
+        this.batchPoints = []; // Micro-batching queue for ultra-fast network sync
+        this.batchFlushTimer = null;
         this.logicalWidth = 800;
         this.logicalHeight = 550;
 
@@ -129,22 +131,36 @@ class DoodleGuessGame {
             this.sound.init();
 
             const coords = getCoords(e);
-            this.isDrawing = true;
-            this.lastX = coords.x;
-            this.lastY = coords.y;
-            this.currentStroke = [{ x: coords.x, y: coords.y }];
+            const rx = Math.round(coords.x);
+            const ry = Math.round(coords.y);
 
-            // Draw initial point / dot
-            this.drawDot(coords.x, coords.y, this.isEraser ? '#0c101b' : this.brushColor, this.brushSize);
+            this.isDrawing = true;
+            this.lastX = rx;
+            this.lastY = ry;
+            this.currentStroke = [{ x: rx, y: ry }];
+            this.batchPoints = [rx, ry];
+
+            const color = this.isEraser ? '#0c101b' : this.brushColor;
+            this.drawDot(rx, ry, color, this.brushSize);
 
             if (this.mode === 'MULTIPLAYER') {
                 this.network.broadcast({
                     type: 'DRAW_DOT',
-                    x: coords.x,
-                    y: coords.y,
-                    color: this.isEraser ? '#0c101b' : this.brushColor,
+                    x: rx,
+                    y: ry,
+                    color: color,
                     size: this.brushSize
                 });
+
+                // Micro-batching: flush points every 25ms (~40Hz) for silky smooth network sync
+                clearInterval(this.batchFlushTimer);
+                this.batchFlushTimer = setInterval(() => {
+                    if (this.isDrawing) {
+                        this.flushDrawBatch();
+                    } else {
+                        clearInterval(this.batchFlushTimer);
+                    }
+                }, 25);
             }
         };
 
@@ -153,25 +169,28 @@ class DoodleGuessGame {
             if (e.cancelable) e.preventDefault();
 
             const coords = getCoords(e);
+            const rx = Math.round(coords.x);
+            const ry = Math.round(coords.y);
+
+            // Skip zero-movement duplicate samples
+            if (rx === this.lastX && ry === this.lastY) return;
+
             const color = this.isEraser ? '#0c101b' : this.brushColor;
 
-            this.drawLine(this.lastX, this.lastY, coords.x, coords.y, color, this.brushSize);
-            this.currentStroke.push({ x: coords.x, y: coords.y });
+            // Draw locally with zero latency
+            this.drawLine(this.lastX, this.lastY, rx, ry, color, this.brushSize);
+            this.currentStroke.push({ x: rx, y: ry });
 
             if (this.mode === 'MULTIPLAYER') {
-                this.network.broadcast({
-                    type: 'DRAW_LINE',
-                    x0: this.lastX,
-                    y0: this.lastY,
-                    x1: coords.x,
-                    y1: coords.y,
-                    color: color,
-                    size: this.brushSize
-                });
+                this.batchPoints.push(rx, ry);
+                // Flush immediately if batch buffer accumulates 16 coordinates (8 line segments)
+                if (this.batchPoints.length >= 16) {
+                    this.flushDrawBatch();
+                }
             }
 
-            this.lastX = coords.x;
-            this.lastY = coords.y;
+            this.lastX = rx;
+            this.lastY = ry;
 
             if (Math.random() < 0.25) {
                 this.sound.playDrawStroke();
@@ -181,6 +200,14 @@ class DoodleGuessGame {
         const endDraw = () => {
             if (!this.isDrawing) return;
             this.isDrawing = false;
+            clearInterval(this.batchFlushTimer);
+
+            // Flush any remaining coordinates in the batch
+            if (this.mode === 'MULTIPLAYER' && this.batchPoints.length >= 4) {
+                this.flushDrawBatch();
+            }
+            this.batchPoints = [];
+
             if (this.currentStroke.length > 0) {
                 this.strokeHistory.push({
                     color: this.isEraser ? '#0c101b' : this.brushColor,
@@ -196,6 +223,24 @@ class DoodleGuessGame {
         canvas.addEventListener('pointerup', endDraw);
         canvas.addEventListener('pointercancel', endDraw);
         canvas.addEventListener('pointerleave', endDraw);
+    }
+
+    flushDrawBatch() {
+        if (!this.canDraw || this.mode !== 'MULTIPLAYER' || this.batchPoints.length < 4) {
+            return;
+        }
+
+        const color = this.isEraser ? '#0c101b' : this.brushColor;
+        this.network.broadcast({
+            type: 'DRAW_BATCH',
+            points: this.batchPoints,
+            color: color,
+            size: this.brushSize
+        });
+
+        // Retain the last point (x, y) so the next batch connects seamlessly
+        const len = this.batchPoints.length;
+        this.batchPoints = [this.batchPoints[len - 2], this.batchPoints[len - 1]];
     }
 
     resizeCanvas() {
@@ -885,6 +930,19 @@ class DoodleGuessGame {
             case 'START_ROUND':
                 this.currentDrawerId = data.drawerId;
                 this.startDrawingRound(data.word);
+                break;
+
+            case 'DRAW_BATCH':
+                if (this.network.playerId !== this.currentDrawerId) {
+                    const pts = data.points;
+                    if (pts && pts.length >= 4) {
+                        for (let i = 0; i < pts.length - 2; i += 2) {
+                            this.drawLine(pts[i], pts[i + 1], pts[i + 2], pts[i + 3], data.color, data.size);
+                        }
+                    } else if (pts && pts.length === 2) {
+                        this.drawDot(pts[0], pts[1], data.color, data.size);
+                    }
+                }
                 break;
 
             case 'DRAW_DOT':
