@@ -740,6 +740,18 @@ body {
     color: var(--color-secondary);
 }
 
+#btn-fill.active {
+    background: rgba(0, 229, 255, 0.25);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.35);
+}
+
+.canvas-container.fill-cursor,
+.canvas-container.fill-cursor #drawing-canvas {
+    cursor: cell !important;
+}
+
 /* Right: Chat Column */
 .panel-chat {
     background: var(--bg-card);

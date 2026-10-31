@@ -45,6 +45,7 @@ class DoodleGuessGame {
         this.brushColor = '#ffffff';
         this.brushSize = 6;
         this.isEraser = false;
+        this.isFillMode = false;
         this.lastX = 0;
         this.lastY = 0;
         this.strokeHistory = []; // For Undo
@@ -86,6 +87,7 @@ class DoodleGuessGame {
         this.toolbar = document.getElementById('canvas-toolbar');
         this.colorButtons = document.querySelectorAll('.color-swatch');
         this.sizeButtons = document.querySelectorAll('.btn-size');
+        this.btnFill = document.getElementById('btn-fill');
         this.btnEraser = document.getElementById('btn-eraser');
         this.btnUndo = document.getElementById('btn-undo');
         this.btnClear = document.getElementById('btn-clear');
@@ -133,6 +135,14 @@ class DoodleGuessGame {
             const coords = getCoords(e);
             const rx = Math.round(coords.x);
             const ry = Math.round(coords.y);
+
+            // Handle Flood Fill / Paint Bucket (MS Paint style)
+            if (this.isFillMode) {
+                const fillColor = this.brushColor;
+                this.floodFill(rx, ry, fillColor, true);
+                this.sound.playDrawStroke();
+                return;
+            }
 
             this.isDrawing = true;
             this.lastX = rx;
@@ -272,6 +282,138 @@ class DoodleGuessGame {
         this.ctx.restore();
     }
 
+    hexToRgba(hex) {
+        let c = (hex || '#ffffff').replace('#', '');
+        if (c.length === 3) {
+            c = c.split('').map(x => x + x).join('');
+        }
+        const num = parseInt(c, 16) || 0;
+        return [
+            (num >> 16) & 255,
+            (num >> 8) & 255,
+            num & 255,
+            255
+        ];
+    }
+
+    floodFill(startX, startY, fillColorHex, broadcast = true) {
+        startX = Math.floor(startX);
+        startY = Math.floor(startY);
+        const w = this.logicalWidth;
+        const h = this.logicalHeight;
+
+        if (startX < 0 || startX >= w || startY < 0 || startY >= h) {
+            return;
+        }
+
+        const imgData = this.ctx.getImageData(0, 0, w, h);
+        const data = imgData.data;
+
+        const startPos = (startY * w + startX) * 4;
+        const startR = data[startPos];
+        const startG = data[startPos + 1];
+        const startB = data[startPos + 2];
+        const startA = data[startPos + 3];
+
+        const [fillR, fillG, fillB, fillA] = this.hexToRgba(fillColorHex);
+
+        // Color difference distance check
+        const colorDiff = (r1, g1, b1, a1, r2, g2, b2, a2) => {
+            return Math.abs(r1 - r2) + Math.abs(g1 - g2) + Math.abs(b1 - b2) + Math.abs(a1 - a2);
+        };
+
+        // If target area already has the fill color, return early
+        if (colorDiff(startR, startG, startB, startA, fillR, fillG, fillB, fillA) < 15) {
+            return;
+        }
+
+        const tolerance = 42; // Soft edge anti-alias blending tolerance
+        const visited = new Uint8Array(w * h);
+        const queue = new Int32Array(w * h);
+        let head = 0;
+        let tail = 0;
+
+        const startIdx = startX + startY * w;
+        queue[tail++] = startIdx;
+        visited[startIdx] = 1;
+
+        while (head < tail) {
+            const idx = queue[head++];
+            const cx = idx % w;
+            const cy = (idx / w) | 0;
+            const p = idx * 4;
+
+            data[p] = fillR;
+            data[p + 1] = fillG;
+            data[p + 2] = fillB;
+            data[p + 3] = fillA;
+
+            // West
+            if (cx > 0) {
+                const nIdx = idx - 1;
+                if (!visited[nIdx]) {
+                    const np = nIdx * 4;
+                    if (colorDiff(data[np], data[np + 1], data[np + 2], data[np + 3], startR, startG, startB, startA) <= tolerance) {
+                        visited[nIdx] = 1;
+                        queue[tail++] = nIdx;
+                    }
+                }
+            }
+            // East
+            if (cx < w - 1) {
+                const nIdx = idx + 1;
+                if (!visited[nIdx]) {
+                    const np = nIdx * 4;
+                    if (colorDiff(data[np], data[np + 1], data[np + 2], data[np + 3], startR, startG, startB, startA) <= tolerance) {
+                        visited[nIdx] = 1;
+                        queue[tail++] = nIdx;
+                    }
+                }
+            }
+            // North
+            if (cy > 0) {
+                const nIdx = idx - w;
+                if (!visited[nIdx]) {
+                    const np = nIdx * 4;
+                    if (colorDiff(data[np], data[np + 1], data[np + 2], data[np + 3], startR, startG, startB, startA) <= tolerance) {
+                        visited[nIdx] = 1;
+                        queue[tail++] = nIdx;
+                    }
+                }
+            }
+            // South
+            if (cy < h - 1) {
+                const nIdx = idx + w;
+                if (!visited[nIdx]) {
+                    const np = nIdx * 4;
+                    if (colorDiff(data[np], data[np + 1], data[np + 2], data[np + 3], startR, startG, startB, startA) <= tolerance) {
+                        visited[nIdx] = 1;
+                        queue[tail++] = nIdx;
+                    }
+                }
+            }
+        }
+
+        this.ctx.putImageData(imgData, 0, 0);
+
+        // Record in history for Undo
+        this.strokeHistory.push({
+            type: 'fill',
+            x: startX,
+            y: startY,
+            color: fillColorHex
+        });
+
+        if (broadcast && this.canDraw && this.mode === 'MULTIPLAYER') {
+            this.network.broadcast({
+                type: 'FLOOD_FILL',
+                x: startX,
+                y: startY,
+                color: fillColorHex
+            });
+        }
+    }
+
     clearCanvas(broadcast = true) {
         this.ctx.save();
         this.ctx.fillStyle = '#0c101b';
@@ -298,14 +440,17 @@ class DoodleGuessGame {
     }
 
     redrawHistory() {
-        this.strokeHistory.forEach(stroke => {
-            if (!stroke.points || stroke.points.length === 0) return;
-            const pts = stroke.points;
-            if (pts.length === 1) {
-                this.drawDot(pts[0].x, pts[0].y, stroke.color, stroke.size);
-            } else {
-                for (let i = 1; i < pts.length; i++) {
-                    this.drawLine(pts[i - 1].x, pts[i - 1].y, pts[i].x, pts[i].y, stroke.color, stroke.size);
+        this.strokeHistory.forEach(action => {
+            if (action.type === 'fill') {
+                this.floodFill(action.x, action.y, action.color, false);
+            } else if (action.points && action.points.length > 0) {
+                const pts = action.points;
+                if (pts.length === 1) {
+                    this.drawDot(pts[0].x, pts[0].y, action.color, action.size);
+                } else {
+                    for (let i = 1; i < pts.length; i++) {
+                        this.drawLine(pts[i - 1].x, pts[i - 1].y, pts[i].x, pts[i].y, action.color, action.size);
+                    }
                 }
             }
         });
@@ -514,13 +659,35 @@ class DoodleGuessGame {
                 this.sizeButtons.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 this.brushSize = parseInt(btn.dataset.size, 10);
+                this.isEraser = false;
+                this.isFillMode = false;
+                this.btnEraser?.classList.remove('active');
+                this.btnFill?.classList.remove('active');
+                this.canvasContainer?.classList.remove('fill-cursor');
                 this.sound.playUiClick();
             });
+        });
+
+        this.btnFill?.addEventListener('click', () => {
+            this.isFillMode = !this.isFillMode;
+            this.btnFill.classList.toggle('active', this.isFillMode);
+            this.canvasContainer?.classList.toggle('fill-cursor', this.isFillMode);
+            if (this.isFillMode) {
+                this.isEraser = false;
+                this.btnEraser?.classList.remove('active');
+                this.showNotification('Paint Bucket active! Click any enclosed area to fill 🪣', 'info');
+            }
+            this.sound.playUiClick();
         });
 
         this.btnEraser?.addEventListener('click', () => {
             this.isEraser = !this.isEraser;
             this.btnEraser.classList.toggle('active', this.isEraser);
+            if (this.isEraser) {
+                this.isFillMode = false;
+                this.btnFill?.classList.remove('active');
+                this.canvasContainer?.classList.remove('fill-cursor');
+            }
             this.sound.playUiClick();
         });
 
@@ -954,6 +1121,12 @@ class DoodleGuessGame {
             case 'DRAW_LINE':
                 if (this.network.playerId !== this.currentDrawerId) {
                     this.drawLine(data.x0, data.y0, data.x1, data.y1, data.color, data.size);
+                }
+                break;
+
+            case 'FLOOD_FILL':
+                if (this.network.playerId !== this.currentDrawerId) {
+                    this.floodFill(data.x, data.y, data.color, false);
                 }
                 break;
 

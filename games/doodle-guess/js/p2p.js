@@ -261,7 +261,7 @@ class DoodleP2PNetwork {
         // If Host receives data from a guest, relay game-relevant packets to all other guests
         if (this.isHost && fromConn) {
             const relayTypes = [
-                'DRAW_BATCH', 'DRAW_DOT', 'DRAW_LINE', 
+                'DRAW_BATCH', 'DRAW_DOT', 'DRAW_LINE', 'FLOOD_FILL',
                 'CLEAR_CANVAS', 'UNDO_STROKE', 
                 'CHAT_MESSAGE', 'CORRECT_GUESS_BROADCAST'
             ];
