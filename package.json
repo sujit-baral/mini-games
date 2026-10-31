@@ -5,7 +5,7 @@
   "scripts": {
     "start": "npx -y serve .",
     "dev": "npx -y serve .",
-    "build": "node qa_test_suite.js",
+    "build": "echo 'Static build ready'",
     "test": "node qa_test_suite.js"
   },
   "keywords": [
