@@ -236,6 +236,83 @@ const ARCADE_GAMES = [
                 <circle cx="240" cy="95" r="4" fill="#ffffff"/>
             </svg>
         `
+    },
+    {
+        id: 'doodle-guess',
+        title: 'Doodle Guess Arcade',
+        slug: 'doodle-guess',
+        category: 'multiplayer',
+        categoryName: 'Multiplayer & Party',
+        badge: 'Multiplayer',
+        route: 'games/doodle-guess/index.html',
+        description: 'Real-time multiplayer drawing and word guessing with friends via WebRTC P2P! Create private rooms, draw live sketches, or play Solo Challenge mode.',
+        controls: '✏️ Mouse/Touch Drawing & 💬 Chat Guessing',
+        tags: ['multiplayer', 'drawing', 'p2p', 'party', 'guess', 'doodle', 'skribbl', 'puzzle'],
+        tech: 'HTML5 Canvas &bull; WebRTC P2P &bull; Web Audio',
+        svgIllustration: `
+            <svg viewBox="0 0 400 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Doodle Guess Arcade Illustration">
+                <defs>
+                    <linearGradient id="dgBg" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#0f172a"/>
+                        <stop offset="100%" stop-color="#060913"/>
+                    </linearGradient>
+                    <linearGradient id="easelGrad" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stop-color="#1e293b"/>
+                        <stop offset="100%" stop-color="#0f172a"/>
+                    </linearGradient>
+                    <linearGradient id="brushGrad" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#ec4899"/>
+                        <stop offset="50%" stop-color="#00e5ff"/>
+                        <stop offset="100%" stop-color="#f59e0b"/>
+                    </linearGradient>
+                </defs>
+                <rect width="400" height="240" fill="url(#dgBg)"/>
+
+                <!-- Grid lines -->
+                <line x1="0" y1="60" x2="400" y2="60" stroke="rgba(0, 229, 255, 0.05)" stroke-width="1"/>
+                <line x1="0" y1="120" x2="400" y2="120" stroke="rgba(0, 229, 255, 0.05)" stroke-width="1"/>
+                <line x1="0" y1="180" x2="400" y2="180" stroke="rgba(0, 229, 255, 0.05)" stroke-width="1"/>
+
+                <!-- Canvas Board with Stand -->
+                <rect x="70" y="30" width="260" height="150" rx="12" fill="url(#easelGrad)" stroke="rgba(0, 229, 255, 0.3)" stroke-width="2"/>
+                <rect x="85" y="45" width="230" height="120" rx="6" fill="#080d1a" stroke="rgba(255, 255, 255, 0.08)" stroke-width="1"/>
+
+                <!-- Drawn Doodle (Cute Star with eyes & smile) -->
+                <path d="M 170 85 L 182 60 L 194 85 L 220 88 L 200 106 L 205 132 L 182 118 L 159 132 L 164 106 L 144 88 Z" fill="#facc15" stroke="#eab308" stroke-width="2" filter="drop-shadow(0 0 10px rgba(250, 204, 21, 0.4))"/>
+                <!-- Star Eyes & Smile -->
+                <circle cx="176" cy="94" r="2.5" fill="#1e293b"/>
+                <circle cx="188" cy="94" r="2.5" fill="#1e293b"/>
+                <path d="M 178 102 Q 182 106 186 102" fill="none" stroke="#1e293b" stroke-width="2" stroke-linecap="round"/>
+
+                <!-- Magic Sparkle Trail -->
+                <path d="M 220 70 Q 260 50 280 85" fill="none" stroke="url(#brushGrad)" stroke-width="4" stroke-linecap="round" filter="drop-shadow(0 0 8px #00e5ff)"/>
+                <circle cx="280" cy="85" r="5" fill="#00e5ff" filter="drop-shadow(0 0 10px #00e5ff)"/>
+
+                <!-- Paint Palette (Bottom Left) -->
+                <g transform="translate(60, 155)">
+                    <ellipse cx="40" cy="30" rx="42" ry="24" fill="#1e293b" stroke="rgba(255, 255, 255, 0.2)" stroke-width="1.5"/>
+                    <circle cx="22" cy="22" r="6" fill="#ef4444"/>
+                    <circle cx="38" cy="18" r="6" fill="#3b82f6"/>
+                    <circle cx="54" cy="22" r="6" fill="#10b981"/>
+                    <circle cx="64" cy="34" r="6" fill="#f59e0b"/>
+                    <circle cx="30" cy="36" r="6" fill="#ec4899"/>
+                </g>
+
+                <!-- Chat Bubble (Top Right) -->
+                <g transform="translate(260, 35)">
+                    <rect width="95" height="34" rx="8" fill="#10b981" filter="drop-shadow(0 0 10px rgba(16, 185, 129, 0.4))"/>
+                    <polygon points="15,34 25,34 10,42" fill="#10b981"/>
+                    <text x="47" y="22" font-family="'Montserrat', sans-serif" font-weight="900" font-size="12" fill="#000" text-anchor="middle">STAR! 🌟</text>
+                </g>
+
+                <!-- Paintbrush (Right Angle) -->
+                <g transform="translate(290, 80) rotate(42)">
+                    <rect x="0" y="0" width="10" height="70" rx="3" fill="#854d0e"/>
+                    <rect x="-1" y="70" width="12" height="12" rx="2" fill="#94a3b8"/>
+                    <path d="M -1 82 Q 5 100 11 82 Z" fill="#00e5ff"/>
+                </g>
+            </svg>
+        `
     }
 ];
 

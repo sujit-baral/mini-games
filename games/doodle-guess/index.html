@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script>
+        // Trailing slash & base protection for static servers
+        (function() {
+            var p = window.location.pathname;
+            if (p && !p.endsWith('/') && !p.endsWith('.html')) {
+                document.write('<base href="' + p + '/">');
+                if (window.history && window.history.replaceState) {
+                    window.history.replaceState(null, '', p + '/' + window.location.search + window.location.hash);
+                }
+            }
+        })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#080a11">
+    <meta name="description" content="Doodle Guess Arcade - Free online multiplayer drawing and guessing game. Create private rooms, invite friends with a link, or play solo against CyberBot. No downloads, no accounts!">
+    <title>Doodle Guess Arcade | Multiplayer Drawing Game | Mini Game Arcade</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800;900&family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Arcade Navigation Header -->
+        <header class="arcade-header">
+            <div class="nav-left">
+                <a href="../../index.html" class="btn-back" title="Back to Mini Game Arcade Home">
+                    <span class="back-arrow">←</span>
+                    <span class="back-label">Arcade Home</span>
+                </a>
+                <div class="brand">
+                    <span class="brand-icon">🎨</span>
+                    <span class="brand-title">DOODLE <span class="highlight">GUESS</span></span>
+                </div>
+            </div>
+
+            <div class="header-controls">
+                <button id="btn-sound-toggle" class="btn-icon" aria-label="Toggle Sound" title="Toggle Sound (M)" type="button">
+                    <span id="sound-icon">🔊</span>
+                    <span id="sound-text" class="btn-label">Sound ON</span>
+                </button>
+                <button id="btn-help-toggle" class="btn-icon" aria-label="Game Instructions" title="How to Play" type="button">
+                    <span>❓</span>
+                    <span class="btn-label">Rules</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Notification Toast -->
+        <div id="toast-notification" class="toast-popup" role="status" aria-live="polite"></div>
+
+        <!-- 1. MAIN LOBBY & MENU SCREEN -->
+        <main id="screen-menu" class="menu-container">
+            <div class="menu-card">
+                <div class="menu-header">
+                    <p class="menu-tagline">🎨 Multiplayer &bull; Instant Play &bull; WebRTC P2P</p>
+                    <h1 class="menu-title">Doodle <span class="highlight">Guess</span> Arcade</h1>
+                    <p class="menu-subtitle">Draw sketches, guess secret words, and compete with friends in private rooms!</p>
+                </div>
+
+                <!-- Mode Tabs: Multiplayer vs Solo -->
+                <div class="mode-tabs" role="tablist">
+                    <button id="tab-btn-multiplayer" class="mode-tab-btn active" role="tab" type="button">
+                        👥 Play with Friends
+                    </button>
+                    <button id="tab-btn-solo" class="mode-tab-btn" role="tab" type="button">
+                        🤖 Solo Challenge
+                    </button>
+                </div>
+
+                <!-- Multiplayer Tab Content -->
+                <div id="tab-content-multiplayer">
+                    <div class="sub-tabs">
+                        <button id="sub-tab-host" class="sub-tab-btn active" type="button">Host Room</button>
+                        <button id="sub-tab-join" class="sub-tab-btn" type="button">Join Room</button>
+                    </div>
+
+                    <!-- Panel: Host Room -->
+                    <form id="panel-host" class="form-container">
+                        <div class="form-group">
+                            <label for="host-player-name" class="form-label">Your Nickname</label>
+                            <input type="text" id="host-player-name" class="form-input" placeholder="e.g. PixelArtist" maxlength="15" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="host-rounds" class="form-label">Rounds</label>
+                                <select id="host-rounds" class="form-select">
+                                    <option value="3" selected>3 Rounds (Quick)</option>
+                                    <option value="5">5 Rounds (Standard)</option>
+                                    <option value="8">8 Rounds (Party)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="host-draw-time" class="form-label">Draw Time</label>
+                                <select id="host-draw-time" class="form-select">
+                                    <option value="45">45 Seconds</option>
+                                    <option value="60" selected>60 Seconds</option>
+                                    <option value="90">90 Seconds</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <span>🚀 Create Private Room</span>
+                        </button>
+                    </form>
+
+                    <!-- Panel: Join Room -->
+                    <form id="panel-join" class="form-container hidden">
+                        <div class="form-group">
+                            <label for="join-player-name" class="form-label">Your Nickname</label>
+                            <input type="text" id="join-player-name" class="form-input" placeholder="e.g. MasterGuesser" maxlength="15" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="join-room-code" class="form-label">Room Code</label>
+                            <input type="text" id="join-room-code" class="form-input" placeholder="e.g. DG849" maxlength="6" style="text-transform: uppercase;" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <span>🎮 Join Room</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Solo Tab Content -->
+                <div id="tab-content-solo" class="hidden">
+                    <div class="solo-modes-grid">
+                        <div class="solo-card">
+                            <div>
+                                <div class="solo-card-icon">🤖</div>
+                                <h3 class="solo-card-title">Bot Challenge</h3>
+                                <p class="solo-card-desc">CyberBot draws vector doodles stroke-by-stroke. Guess the word before the timer expires!</p>
+                            </div>
+                            <button id="btn-start-solo-guess" class="btn btn-primary" type="button">
+                                <span>Play Solo ⏱️</span>
+                            </button>
+                        </div>
+
+                        <div class="solo-card">
+                            <div>
+                                <div class="solo-card-icon">🖌️</div>
+                                <h3 class="solo-card-title">Free Draw</h3>
+                                <p class="solo-card-desc">Get random prompts, practice your sketching skills, and download your artwork as PNG.</p>
+                            </div>
+                            <button id="btn-start-free-draw" class="btn btn-secondary" type="button">
+                                <span>Free Canvas 🎨</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 2. ROOM LOBBY SCREEN (WAITING FOR PLAYERS) -->
+        <div id="screen-lobby" class="menu-container hidden">
+            <div class="menu-card">
+                <div class="menu-header">
+                    <p class="menu-tagline">Private Game Lobby</p>
+                    <h2 class="menu-title">Room Ready!</h2>
+                    <p id="lobby-waiting-msg" class="menu-subtitle">Share this room code with friends to let them join:</p>
+                </div>
+
+                <div class="lobby-code-box">
+                    <div class="lobby-code-label">Room Code</div>
+                    <div id="lobby-room-code-display" class="lobby-code-display">------</div>
+                    <div class="lobby-code-actions">
+                        <button id="btn-copy-code" class="btn btn-secondary" type="button">
+                            <span>📋 Copy Code</span>
+                        </button>
+                        <button id="btn-copy-link" class="btn btn-secondary" type="button">
+                            <span>🔗 Copy Invite Link</span>
+                        </button>
+                        <button id="btn-share-room" class="btn btn-primary" type="button">
+                            <span>📲 Share Room</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="lobby-players-box">
+                    <div class="lobby-players-label">Players in Room</div>
+                    <div id="lobby-players-list" class="lobby-players-grid">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <div class="lobby-footer-actions">
+                    <button id="btn-start-game" class="btn btn-primary btn-block" type="button" style="margin-bottom: 0.8rem;">
+                        <span>🏁 Start Game</span>
+                    </button>
+                    <button id="btn-leave-lobby" class="btn btn-secondary btn-block" type="button">
+                        <span>Leave Lobby</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. MAIN GAME ARENA (ACTIVE MATCH) -->
+        <div id="screen-game" class="game-wrapper hidden">
+            <div class="game-grid">
+                
+                <!-- Left Column: Player Leaderboard -->
+                <aside class="panel-leaderboard">
+                    <div class="panel-header">
+                        <span class="panel-title">🏆 Players</span>
+                        <button id="btn-leave-game" class="tool-btn" title="Leave Match">Exit</button>
+                    </div>
+                    <div id="leaderboard-list" class="leaderboard-list">
+                        <!-- Player cards populated by JS -->
+                    </div>
+                </aside>
+
+                <!-- Center Column: Canvas & Controls -->
+                <section class="panel-arena">
+                    <!-- In-Game HUD -->
+                    <div class="arena-hud">
+                        <div class="hud-item hud-left">
+                            <span class="hud-label">ROUND</span>
+                            <span id="hud-round-value" class="hud-value">1 / 3</span>
+                        </div>
+                        <div class="hud-center">
+                            <div id="hud-word-hint" class="hud-word-hint">_ _ _ _ _</div>
+                            <div id="hud-drawer-status" class="hud-status-text">Someone is drawing</div>
+                        </div>
+                        <div class="hud-item hud-right">
+                            <span class="hud-label">TIME</span>
+                            <span id="hud-timer-value" class="hud-value">01:00</span>
+                        </div>
+                    </div>
+
+                    <!-- Canvas Drawing Area -->
+                    <div id="canvas-container" class="canvas-container">
+                        <canvas id="drawing-canvas"></canvas>
+                    </div>
+
+                    <!-- Drawer Tool Palette (Visible only when current player is Drawer) -->
+                    <div id="canvas-toolbar" class="canvas-toolbar">
+                        <!-- Colors -->
+                        <div class="palette">
+                            <button class="color-swatch active" data-color="#ffffff" style="background:#ffffff;" title="White"></button>
+                            <button class="color-swatch" data-color="#111827" style="background:#111827;" title="Black"></button>
+                            <button class="color-swatch" data-color="#ef4444" style="background:#ef4444;" title="Red"></button>
+                            <button class="color-swatch" data-color="#3b82f6" style="background:#3b82f6;" title="Blue"></button>
+                            <button class="color-swatch" data-color="#10b981" style="background:#10b981;" title="Green"></button>
+                            <button class="color-swatch" data-color="#f59e0b" style="background:#f59e0b;" title="Yellow"></button>
+                            <button class="color-swatch" data-color="#00e5ff" style="background:#00e5ff;" title="Cyan"></button>
+                            <button class="color-swatch" data-color="#ec4899" style="background:#ec4899;" title="Pink"></button>
+                            <button class="color-swatch" data-color="#8b5cf6" style="background:#8b5cf6;" title="Purple"></button>
+                            <button class="color-swatch" data-color="#854d0e" style="background:#854d0e;" title="Brown"></button>
+                        </div>
+
+                        <!-- Brush Sizes -->
+                        <div class="size-selector">
+                            <button class="btn-size size-sm" data-size="3" title="Fine (3px)"><div class="size-dot"></div></button>
+                            <button class="btn-size size-md active" data-size="6" title="Medium (6px)"><div class="size-dot"></div></button>
+                            <button class="btn-size size-lg" data-size="14" title="Bold (14px)"><div class="size-dot"></div></button>
+                            <button class="btn-size size-xl" data-size="26" title="Extra Large (26px)"><div class="size-dot"></div></button>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="tool-actions">
+                            <button id="btn-eraser" class="tool-btn" title="Eraser">🧹 Eraser</button>
+                            <button id="btn-undo" class="tool-btn" title="Undo Stroke">↩️ Undo</button>
+                            <button id="btn-clear" class="tool-btn" title="Clear Board">🗑️ Clear</button>
+                            <button id="btn-download" class="tool-btn" title="Download Image">💾 Save</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Right Column: Live Guessing Chat -->
+                <aside class="panel-chat">
+                    <div class="panel-header">
+                        <span class="panel-title">💬 Live Guesses</span>
+                    </div>
+                    <div id="chat-messages" class="chat-messages" role="log" aria-live="polite">
+                        <!-- Chat entries appended dynamically -->
+                    </div>
+                    <form id="chat-form" class="chat-form">
+                        <input type="text" id="chat-input" class="chat-input" placeholder="Type your guess here..." autocomplete="off" maxlength="30" required>
+                        <button type="submit" class="chat-send-btn">Send</button>
+                    </form>
+                </aside>
+
+            </div>
+
+            <!-- Strategy & Content Depth Section (Below game arena) -->
+            <section class="game-info-article" style="margin-top: 2rem; background: var(--bg-card); border: 1px solid var(--border-card); border-radius: var(--radius-md); padding: 1.8rem; color: var(--text-muted); line-height: 1.6;">
+                <h2 style="color: var(--text-main); font-family: var(--font-heading); font-size: 1.3rem; margin-bottom: 0.8rem;">How to Play Doodle Guess Arcade</h2>
+                <p style="margin-bottom: 1rem;">
+                    <strong>Doodle Guess Arcade</strong> is a fast-paced multiplayer drawing and word-guessing game built exclusively with modern open web platform primitives (HTML5 Canvas 2D, Web Audio API, and WebRTC Peer-to-Peer data channels). Connect with friends anywhere across mobile and desktop with zero account registrations or software downloads!
+                </p>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                    <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.08);">
+                        <h3 style="color: var(--color-primary); font-size: 1rem; margin-bottom: 0.4rem;">✏️ The Drawer</h3>
+                        <p style="font-size: 0.85rem;">When it is your turn, choose 1 of 3 secret words. Draw visual clues on the canvas without writing letters, numbers, or spelling the word out. The faster your friends guess, the more bonus points you earn!</p>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.08);">
+                        <h3 style="color: var(--color-secondary); font-size: 1rem; margin-bottom: 0.4rem;">🔍 The Guessers</h3>
+                        <p style="font-size: 0.85rem;">Watch the canvas closely as strokes appear in real-time. Type your answers into the guess chat. Letter hints reveal themselves as the round clock counts down. The first player to guess correctly gets the top score!</p>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.08);">
+                        <h3 style="color: var(--color-accent); font-size: 1rem; margin-bottom: 0.4rem;">🌐 Peer-to-Peer Networking</h3>
+                        <p style="font-size: 0.85rem;">Multiplayer matches run directly browser-to-browser via WebRTC data channels. Your drawing coordinates stream with sub-50ms latency without uploading any sketches to third-party databases.</p>
+                    </div>
+                </div>
+
+                <h3 style="color: var(--text-main); font-size: 1.05rem; margin-bottom: 0.5rem;">Scoring Breakdown</h3>
+                <ul style="padding-left: 1.2rem; font-size: 0.85rem; margin-bottom: 1rem;">
+                    <li><strong>Guesser Score:</strong> 100 base points + (Remaining seconds &times; 5). Early guesses earn up to 400 points!</li>
+                    <li><strong>Drawer Bonus:</strong> +50 points for each player in the room who successfully guesses your drawing.</li>
+                    <li><strong>Solo Bot Mode:</strong> Test your skills solo! CyberBot draws procedural sketches while you race the 45-second clock.</li>
+                </ul>
+            </section>
+        </div>
+
+        <!-- MODAL: WORD SELECTION (DRAWER ONLY) -->
+        <div id="modal-word-select" class="modal-overlay hidden" role="dialog" aria-modal="true">
+            <div class="modal-card">
+                <div class="modal-icon">🤔</div>
+                <h2 class="modal-title">Choose Your Word</h2>
+                <p class="modal-desc">Pick 1 word to draw this round. Your friends will try to guess it!</p>
+                <div id="word-choices-container" class="word-choices-grid">
+                    <!-- 3 word buttons populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: ROUND SUMMARY -->
+        <div id="modal-round-summary" class="modal-overlay hidden" role="dialog" aria-modal="true">
+            <div class="modal-card">
+                <div class="modal-icon">🔔</div>
+                <h2 class="modal-title">Round Over!</h2>
+                <p class="modal-desc">The secret word was:</p>
+                <div id="summary-secret-word" style="font-family: var(--font-heading); font-size: 2.2rem; font-weight: 900; color: var(--color-primary); margin-bottom: 1.5rem; text-transform: uppercase;">WORD</div>
+                <p style="font-size: 0.9rem; color: var(--text-muted);">Next round starting in a moment...</p>
+            </div>
+        </div>
+
+        <!-- MODAL: GAME OVER & PODIUM -->
+        <div id="modal-game-over" class="modal-overlay hidden" role="dialog" aria-modal="true">
+            <div class="modal-card">
+                <div class="modal-icon">🏆</div>
+                <h2 class="modal-title">Match Complete!</h2>
+                <p class="modal-desc">Winner: <strong id="game-over-winner-name" style="color: var(--color-primary);">Player</strong> (<span id="game-over-winner-score">0 pts</span>)</p>
+                <div id="podium-players-list" class="podium-list">
+                    <!-- Podium items populated by JS -->
+                </div>
+                <button onclick="location.reload()" class="btn btn-primary btn-block" type="button">
+                    <span>🔄 Play Again</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- MODAL: HOW TO PLAY -->
+        <div id="modal-help" class="modal-overlay hidden" role="dialog" aria-modal="true">
+            <div class="modal-card" style="text-align: left;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <h2 class="modal-title" style="margin:0; font-size:1.4rem;">Game Rules &amp; Tips</h2>
+                    <button id="btn-close-help" class="tool-btn">✕ Close</button>
+                </div>
+                <div style="font-size:0.9rem; color:var(--text-muted); line-height:1.5;">
+                    <p style="margin-bottom:0.8rem;"><strong>👥 Multiplayer:</strong> One player clicks "Host Room" and shares the room link. Friends join from their phone or computer.</p>
+                    <p style="margin-bottom:0.8rem;"><strong>✏️ Drawing:</strong> Select colors and brush sizes from the toolbar. Draw smoothly with mouse or touch. No letters or spelling allowed!</p>
+                    <p style="margin-bottom:0.8rem;"><strong>💬 Guessing:</strong> Guessers type answers into the chat box. Correct guesses award points based on how fast you answer.</p>
+                    <p style="margin-bottom:0.8rem;"><strong>🤖 Solo Mode:</strong> Don't have friends online right now? Play the Solo Bot Challenge to guess animated sketches drawn by CyberBot!</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- PeerJS WebRTC Library for Peer-to-Peer Data Channels -->
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <!-- Game Scripts -->
+    <script src="js/words.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/p2p.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
