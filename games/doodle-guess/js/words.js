@@ -170,3 +170,4 @@ if (typeof window !== 'undefined') {
     window.ALL_WORDS = ALL_WORDS;
     window.SOLO_BOT_DOODLES = SOLO_BOT_DOODLES;
 }
+

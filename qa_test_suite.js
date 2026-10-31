@@ -325,3 +325,4 @@ console.log('✓ Doodle Guess Arcade: Word bank, vector doodles, room creation, 
 console.log('\n========================================================');
 console.log('🎉 ALL PRODUCTION QA TESTS PASSED WITH 100% SUCCESS! 🎉');
 console.log('========================================================\n');
+process.exit(0);

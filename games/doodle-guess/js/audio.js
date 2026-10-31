@@ -204,3 +204,4 @@ class DoodleSoundController {
 if (typeof window !== 'undefined') {
     window.DoodleSoundController = DoodleSoundController;
 }
+

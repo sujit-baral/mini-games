@@ -5,7 +5,7 @@
   "scripts": {
     "start": "npx -y serve .",
     "dev": "npx -y serve .",
-    "build": "npm test",
+    "build": "node qa_test_suite.js",
     "test": "node qa_test_suite.js"
   },
   "keywords": [

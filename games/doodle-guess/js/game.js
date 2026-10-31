@@ -1205,3 +1205,4 @@ class DoodleGuessGame {
 document.addEventListener('DOMContentLoaded', () => {
     window.doodleGame = new DoodleGuessGame();
 });
+
