@@ -645,17 +645,19 @@ class DoodleGuessGame {
         this.currentDrawerId = drawer.id;
         this.currentDrawerIndex++;
 
-        // Broadcast or start Word Selection
+        // Broadcast and execute Word Selection
         if (this.network.isHost) {
             const words = this.pickThreeWords();
-            this.network.broadcast({
+            const msg = {
                 type: 'ROUND_WORD_SELECT',
                 roundNumber: this.roundNumber,
                 maxRounds: this.maxRounds,
                 drawerId: this.currentDrawerId,
                 drawerName: drawer.name,
                 wordChoices: words
-            });
+            };
+            this.network.broadcast(msg);
+            this.handleNetworkMessage(msg);
         }
     }
 
@@ -759,6 +761,14 @@ class DoodleGuessGame {
         this.sound.playRoundEnd();
         this.addChatMessage('system', `⌛ Time's up! The secret word was: ${this.currentWord}`);
 
+        // Broadcast to guests if host
+        if (this.network.isHost) {
+            this.network.broadcast({
+                type: 'ROUND_TIME_UP',
+                word: this.currentWord
+            });
+        }
+
         // Show Round Summary Modal
         document.getElementById('summary-secret-word').textContent = this.currentWord;
         this.modalRoundSummary.classList.remove('hidden');
@@ -776,6 +786,14 @@ class DoodleGuessGame {
         clearInterval(this.timerInterval);
         this.gameState = 'GAME_OVER';
         this.canDraw = false;
+
+        // Broadcast match finish to guests
+        if (this.network.isHost) {
+            this.network.broadcast({
+                type: 'GAME_OVER',
+                players: this.players
+            });
+        }
 
         // Sort players by score
         const sorted = [...this.players].sort((a, b) => b.score - a.score);
@@ -837,10 +855,25 @@ class DoodleGuessGame {
                 this.maxRounds = data.maxRounds;
                 this.currentDrawerId = data.drawerId;
 
-                if (this.network.playerId === data.drawerId) {
+                // Close lobby and modals, transition to game arena immediately!
+                this.screenLobby.classList.add('hidden');
+                this.screenMenu.classList.add('hidden');
+                this.modalRoundSummary.classList.add('hidden');
+                this.modalGameOver.classList.add('hidden');
+                this.screenGame.classList.remove('hidden');
+
+                this.roundDisplay.textContent = `${this.roundNumber} / ${this.maxRounds}`;
+                const currentDrawer = this.players.find(p => p.id === this.currentDrawerId);
+                const isMeDrawer = (this.network.playerId === this.currentDrawerId);
+                this.drawerStatusText.textContent = isMeDrawer ? 'You are choosing a word...' : `${currentDrawer ? currentDrawer.name : 'Player'} is choosing...`;
+                this.updateLeaderboard();
+
+                if (isMeDrawer) {
                     // I am the drawer! Display 3 word choices
                     this.showWordSelectModal(data.wordChoices);
                 } else {
+                    this.toolbar.style.display = 'none';
+                    this.canDraw = false;
                     this.addChatMessage('system', `🎨 ${data.drawerName} is choosing a word...`);
                 }
                 break;
@@ -881,6 +914,28 @@ class DoodleGuessGame {
                 this.updateLeaderboard();
                 this.sound.playCorrectGuess();
                 this.addChatMessage('correct', `🎉 ${data.guesserName} guessed the word! (+${data.pointsAwarded} pts)`);
+
+                if (this.network.isHost) {
+                    const guessers = this.players.filter(p => p.id !== this.currentDrawerId);
+                    if (guessers.length > 0 && guessers.every(g => g.hasGuessed)) {
+                        clearInterval(this.timerInterval);
+                        this.onRoundTimeUp();
+                    }
+                }
+                break;
+
+            case 'ROUND_TIME_UP':
+                if (!this.network.isHost) {
+                    this.currentWord = data.word || this.currentWord;
+                    this.onRoundTimeUp();
+                }
+                break;
+
+            case 'GAME_OVER':
+                if (!this.network.isHost) {
+                    this.players = data.players || this.players;
+                    this.endMultiplayerGame();
+                }
                 break;
         }
     }
